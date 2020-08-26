@@ -2,6 +2,8 @@
 // Created by binlee on 20-8-2.
 //
 
+#include <stdio.h>
+
 /**
  * 字符串长度
  * @param input 给定字符串
