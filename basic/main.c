@@ -2,8 +2,10 @@
 // Created by binlee on 20-7-31.
 //
 
-#include "str/str_usage.h"
-#include "data_type/data_type.h"
+#include <stdio.h>
+#include "main/str_usage.h"
+#include "main/data_type.h"
+#include "main/ptr_type.h"
 
 int main() {
 
@@ -18,5 +20,11 @@ int main() {
     printf(">>>>>>>>>>>start of fun basic()\n");
     basic();
     printf(">>>>>>>>>>>end of fun basic()\n");
+
+    enum_type();
+
+    ptr_type();
+
+    callback_fun();
     return 0;
 }

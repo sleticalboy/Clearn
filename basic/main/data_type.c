@@ -5,6 +5,17 @@
 #include <stdio.h>
 #include "data_type.h"
 
+void enum_type() {
+    // 声明 enum 变量
+    enum DAY day;
+    day = FRI;
+    printf("day: %d\n", day);
+    // 只有连续的 enum 类型，才可以被这样遍历
+    for (day = MON; day <= SUN; day++) {
+        printf("day: %d\n", day);
+    }
+}
+
 /**
  * c basic
  */

@@ -4,12 +4,13 @@ project(basic C)
 set(CMAKE_C_STANDARD 99)
 
 # 包含以下源码目录
-include_directories(data_type/)
-include_directories(str/)
+include_directories(main/)
 
 # 递归目录中符合条件的文件
-file(GLOB_RECURSE DATA_TYPE_RESOURCES "data_type/*.h" "data_type/*.c")
-file(GLOB_RECURSE STR_RESOURCES "str/*.h" "str/*.c")
+file(GLOB_RECURSE MAIN_RESOURCES "main/*.h" "main/*.c")
+# 打印日志信息
+message("data type files: ${DATA_TYPE_RESOURCES}")
+message("str files: ${STR_RESOURCES}")
 
 # 可执行文件
-add_executable(basic main.c ${DATA_TYPE_RESOURCES} ${STR_RESOURCES})
+add_executable(basic main.c ${MAIN_RESOURCES})
