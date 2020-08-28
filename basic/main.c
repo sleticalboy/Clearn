@@ -9,6 +9,7 @@
 #include "main/ptr_type.h"
 #include "main/struct_type.h"
 #include "main/macro_type.h"
+#include "main/file_type.h"
 
 int main() {
 
@@ -30,5 +31,8 @@ int main() {
 
     printf("\n>>>>>about macro>>>>>>\n");
     macro_main();
+
+    printf("\n>>>>>about file>>>>>>\n");
+    file_main();
     return 0;
 }
