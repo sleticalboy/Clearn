@@ -8,23 +8,27 @@
 #include "main/data_type.h"
 #include "main/ptr_type.h"
 #include "main/struct_type.h"
+#include "main/macro_type.h"
 
 int main() {
 
-    printf("Hello, C World! This is my first c program!\n\n");
+    printf("Hello, C World! This is my first c program!\n");
 
-    printf(">>>>>about data type>>>>>>\n");
+    printf("\n>>>>>about data type>>>>>>\n");
     basic();
     enum_type();
 
-    printf(">>>>>about pointer>>>>>>\n");
+    printf("\n>>>>>about pointer>>>>>>\n");
     ptr_type();
     callback_fun();
 
-    printf(">>>>>about string>>>>>>\n");
+    printf("\n>>>>>about string>>>>>>\n");
     str_api();
 
-    printf(">>>>>about struct>>>>>>\n");
+    printf("\n>>>>>about struct>>>>>>\n");
     about_struct();
+
+    printf("\n>>>>>about macro>>>>>>\n");
+    macro_main();
     return 0;
 }
