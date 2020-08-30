@@ -11,9 +11,11 @@
 #include "src/main/macro_type.h"
 #include "src/main/file_type.h"
 #include "src/main/variable_args.h"
-#include "main.h"
+#include "src/main/mem_manage.h"
 
 #include "src/algorithm/fibonacci.h"
+
+#include "main.h"
 
 void basic_main();
 
@@ -29,6 +31,7 @@ int c_main() {
 }
 
 void alg_main() {
+    printf("\n>>>>>about algorithm>>>>>>\n");
     fibonacci(13);
 }
 
@@ -57,4 +60,7 @@ void basic_main() {
 
     printf("\n>>>>>about variable arguments>>>>>>\n");
     variable_args_main();
+
+    printf("\n>>>>>about memory management>>>>>>\n");
+    memory_manage();
 }

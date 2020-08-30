@@ -10,6 +10,6 @@ using namespace std;
 
 int main() {
     const int ret = c_main();
-    cout << "Hello, C++ World!" << endl;
+    cout << "\n>>>>>>>Welcome to C++ World!<<<<<<<<" << endl;
     return ret;
 }
