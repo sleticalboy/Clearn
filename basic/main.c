@@ -10,6 +10,8 @@
 #include "src/main/struct_type.h"
 #include "src/main/macro_type.h"
 #include "src/main/file_type.h"
+#include "src/main/variable_args.h"
+#include "main.h"
 
 #include "src/algorithm/fibonacci.h"
 
@@ -17,9 +19,10 @@ void basic_main();
 
 void alg_main();
 
-int main() {
+int c_main() {
 
-    // basic_main();
+    basic_main();
+
     alg_main();
 
     return 0;
@@ -51,4 +54,7 @@ void basic_main() {
 
     printf("\n>>>>>about file>>>>>>\n");
     file_main();
+
+    printf("\n>>>>>about variable arguments>>>>>>\n");
+    variable_args_main();
 }
