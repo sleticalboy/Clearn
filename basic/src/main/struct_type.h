@@ -8,6 +8,8 @@ struct Book { // 总长度为 32
     char *author; // 长度为8
     char *subject; // 长度为8
     int id; // 长度为 4 + 空闲 4(与 8 对齐)
+    // 打印 Book 的详细内容
+    char *(*toString)(struct Book book);
 };
 
 // 方式二: 声明的时候不需要使用 struct 关键字，如: Admin admin = {...};
