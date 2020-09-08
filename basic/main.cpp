@@ -4,6 +4,7 @@
 
 #include "main.h"
 #include "src/cpp/cpp_string.h"
+#include "src/cpp/Person.h"
 
 #include <iostream>
 
@@ -22,4 +23,6 @@ int main() {
 
 void cpp_main() {
     cpp_string();
+
+    person_main();
 }
