@@ -12,6 +12,7 @@
 #include "src/main/file_type.h"
 #include "src/main/variable_args.h"
 #include "src/main/mem_manage.h"
+#include "src/main/thread.h"
 
 #include "src/algorithm/fibonacci.h"
 
@@ -63,4 +64,7 @@ void basic_main() {
 
     printf("\n>>>>>about memory management>>>>>>\n");
     memory_manage();
+
+    printf("\n>>>>>about thread usage>>>>>>\n");
+    thread_main();
 }
