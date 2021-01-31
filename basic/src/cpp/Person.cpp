@@ -2,28 +2,30 @@
 // Created by binlee on 2020/9/8.
 //
 
-#include <iostream>
 #include "Person.h"
 
-Person::Person(std::string name, int age, int gender) {
-    this->name = std::move(name);
-    this->age = age;
-    this->gender = gender;
+Ben::Ben(std::string name, int age, int gender) {
+    mName = move(name);
+    mAge = age;
+    mGender = gender;
     std::cout << "Person's constructor is invoked." << std::endl;
 }
 
-Person::~Person() {
-    std::cout << "Person's destructor is invoked." << std::endl;
+void Ben::speak() {
+    std::cout << "I'm " << getName() << " and I'm " << getAge() << " years old.\n" << std::endl;
 }
 
-void Person::speak() const {
-    std::cout << "I'm " << name << " and I'm " << age << " years old.\n";
+std::string Ben::toString() {
+    return "name: " + getName() + ", age: " + std::to_string(getAge()) + ", gender: " + std::to_string(getGender());
 }
 
 void person_main() {
 
     std::cout << "\n>>>>>This is my first cpp class: Person<<<<<" << std::endl;
 
-    Person ben("Ben", 26, MALE);
+    Ben ben("Ben", 26, MALE);
+
     ben.speak();
+
+    std::cout << ben.toString() << std::endl;
 }

@@ -8,17 +8,16 @@
 
 #include <iostream>
 
-using namespace std;
-
 void cpp_main();
 
 int main() {
-    const int ret = c_main();
-    cout << "\n>>>>>>>Welcome to C++ World!<<<<<<<<" << endl;
+    // const int ret = c_main();
+    // return ret;
+    std::cout << "\n>>>>>>>Welcome to C++ World!<<<<<<<<" << std::endl;
 
     cpp_main();
 
-    return ret;
+    return 0;
 }
 
 void cpp_main() {
