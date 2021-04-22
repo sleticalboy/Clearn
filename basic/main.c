@@ -34,6 +34,8 @@ int c_main() {
 void alg_main() {
     printf("\n>>>>>about algorithm>>>>>>\n");
     fibonacci(13);
+    printf(">>>>>quick sort>>>>>>\n");
+    quick_sort();
 }
 
 void basic_main() {

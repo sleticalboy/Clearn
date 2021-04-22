@@ -11,4 +11,6 @@
  */
 void fibonacci(int level);
 
+void quick_sort();
+
 #endif //BASIC_FIBONACCI_H
