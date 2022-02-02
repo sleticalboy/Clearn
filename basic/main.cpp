@@ -8,20 +8,22 @@
 
 #include <iostream>
 
-void cpp_main();
+int cpp_main();
 
 int main() {
-    // const int ret = c_main();
-    // return ret;
+    // c 语言
+    const int ret = c_main();
+    if (ret) return ret;
+
+    // cpp
     std::cout << "\n>>>>>>>Welcome to C++ World!<<<<<<<<" << std::endl;
-
-    cpp_main();
-
-    return 0;
+    return cpp_main();
 }
 
-void cpp_main() {
+int cpp_main() {
     cpp_string();
 
     person_main();
+
+    return 0;
 }

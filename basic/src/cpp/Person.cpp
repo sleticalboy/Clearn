@@ -25,6 +25,8 @@ void person_main() {
 
     Ben ben("Ben", 26, MALE);
 
+    printf("ben's size: %lu\n", sizeof(ben));
+
     ben.speak();
 
     std::cout << ben.toString() << std::endl;

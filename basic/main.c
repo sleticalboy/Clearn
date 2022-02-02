@@ -23,11 +23,10 @@ void basic_main();
 void alg_main();
 
 int c_main() {
-
+    // 基础
     basic_main();
-
+    // 算法
     alg_main();
-
     return 0;
 }
 

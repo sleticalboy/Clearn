@@ -20,4 +20,9 @@
 #define MAX(x, y) (x > y ? x : y)
 #endif
 
+#ifndef ARR_LEN
+// 定义宏：计算数组长度
+#define ARR_LEN(arr) (sizeof(arr) / sizeof(*arr))
+#endif
+
 void macro_main();

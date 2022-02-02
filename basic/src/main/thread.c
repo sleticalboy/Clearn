@@ -6,11 +6,12 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 pthread_t pid;
 int counter;
 
-void *task(void *arg) {
+void *task() {
     while (counter > 0) {
         usleep(300);
         printf("sub thread running...%d\n", counter--);
@@ -21,7 +22,8 @@ void *task(void *arg) {
 void thread_main() {
     printf("pthread_main() run...\n");
     counter = 20;
-    pthread_create(&pid, NULL, task, NULL);
+    int ret = pthread_create(&pid, NULL, task, NULL);
+    printf("pthread_create %d, pid: %lu\n", ret, pid);
     while (counter > 0) {
         usleep(300);
         printf("main thread running...%d\n", counter--);

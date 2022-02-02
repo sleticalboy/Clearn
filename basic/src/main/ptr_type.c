@@ -22,18 +22,20 @@ void ptr_type() {
 
     int arr[5] = {1, 2, 3, 4, 5};
     // 计算数组长度
-    int len = sizeof(arr) / sizeof(int);
+    int len = sizeof(arr) / sizeof(*arr/*arr[0]*/);
     printf("sizeof(arr) is %d\n", len);
     // 使用指针遍历数组
-    printf("use pointer to print array.\n");
+    printf("use pointer to print array:\n");
     for (int i = 0; i < len; ++i) {
-        printf("arr %d is %d\n", i, *(arr + i));
+        printf("%p -> %d ", &arr[i], *(arr + i));
     }
+    printf("\n");
     // 使用索引遍历数组
-    printf("use index to print array.\n");
+    printf("use index to print array:\n");
     for (int i = 0; i < len; ++i) {
-        printf("arr %d is %d\n", i, arr[i]);
+        printf("%d -> %d ", i, arr[i]);
     }
+    printf("\n");
     // 空指针
     int *null_ptr = NULL;
     printf("null pointer is %p\n", null_ptr);
@@ -57,7 +59,7 @@ void ptr_type() {
     // 字符串本身就是一个 char* 指针
     // 字符串数组指针
     char *names[] = {"ben", "lynne", "will", "jordan"};
-    len = sizeof(names) / sizeof(char *);
+    len = sizeof(names) / sizeof(*names);
     printf("sizeof(*names): %lu, sizeof(char*): %lu, length of names: %d\n", sizeof(names), sizeof(char *), len);
     for (int i = 0; i < len; ++i) {
         printf("name[%d] is %s\n", i, names[i]);
@@ -70,7 +72,7 @@ void ptr_type() {
     fun(5, 8);
 }
 
-int generate() {
+int generate(void) {
     return rand();
 }
 
@@ -83,7 +85,7 @@ void fill_array(int *arr, size_t size, int (*generate)(void)) {
 
 void callback_fun() {
     int arr[10];
-    size_t size = sizeof(arr) / sizeof(int);
+    size_t size = sizeof(arr) / sizeof(*arr);
     // 回调函数： generate() 可以参考 java 语言中的回调接口
     fill_array(arr, size, generate);
     for (size_t i = 0; i < size; ++i) {
