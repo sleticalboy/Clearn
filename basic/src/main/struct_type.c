@@ -30,3 +30,11 @@ void about_struct() {
     printf("sizeof(struct Book) %lu\n", sizeof(struct Book));
     printf("sizeof(struct Admin) %lu\n", sizeof(Admin));
 }
+
+void about_union() {
+    union person p;
+    printf("person's size: %lu\n", sizeof(union person));
+    p.time = 0x1001000000000018;
+    printf("person.time 0x%lx\n", p.time);
+    printf("person.age 0x%x\n", p.age);
+}

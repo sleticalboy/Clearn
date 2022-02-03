@@ -22,3 +22,16 @@ typedef struct { // 总长度为 16
  * 结构体: struct
  */
 void about_struct();
+
+
+// 共用一块内存，每次只能使用一个属性
+// 总大小取决于属性所占用的最大空间
+union person {
+    char age; // 2 * 4 = 8
+    long time; // 8 * 4 = 32
+};
+
+/**
+ * 共用体：union
+ */
+void about_union();

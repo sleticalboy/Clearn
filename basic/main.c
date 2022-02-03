@@ -54,6 +54,9 @@ void basic_main() {
     printf("\n>>>>>about struct>>>>>>\n");
     about_struct();
 
+    printf("\n>>>>>about union>>>>>>\n");
+    about_union();
+
     printf("\n>>>>>about macro>>>>>>\n");
     macro_main();
 
