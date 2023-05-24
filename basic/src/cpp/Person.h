@@ -50,7 +50,7 @@ public:
     std::string toString() override;
 
     ~Ben() {
-        mName = nullptr;
+        mName = "";
         mAge = 0;
         mGender = 0;
         std::cout << "Ben's destructor is invoked." << std::endl;
