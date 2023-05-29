@@ -19,12 +19,20 @@ int cpp_main();
 
 int main() {
     // c 语言
-    const int ret = c_main();
-    if (ret) return ret;
+    // const int ret = c_main();
+    // if (ret) return ret;
 
     // cpp
     std::cout << "\n>>>>>>>Welcome to C++ World!<<<<<<<<" << std::endl;
     return cpp_main();
+}
+
+bool startsWith(const string &s, const string &prefix) {
+    return s.find(prefix) == 0;
+}
+
+bool endsWith(const string &s, const string &suffix) {
+    return s.substr(s.rfind(suffix)) == suffix;
 }
 
 void map_files_0(const string &path, map<long long, string> &file_map) {
@@ -77,5 +85,11 @@ int cpp_main() {
     for (const auto &item: file_map) {
         std::printf("cpp style --->%lld: %s\n", item.first, item.second.c_str());
     }
+    string xyt("0x06000000000007CA.xyt");
+    printf("%s ends with '.xyt': %d\n", xyt.c_str(), endsWith(xyt, string(".xyt")));
+    printf("%s starts with '0x': %d\n", xyt.c_str(), startsWith(xyt, string("0x")));
+    xyt = "00xddd.xytt";
+    printf("%s ends with '.xyt': %d\n", xyt.c_str(), endsWith(xyt, string(".xyt")));
+    printf("%s starts with '0x': %d\n", xyt.c_str(), startsWith(xyt, string("0x")));
     return 0;
 }
