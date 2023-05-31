@@ -32,7 +32,8 @@ bool startsWith(const string &s, const string &prefix) {
 }
 
 bool endsWith(const string &s, const string &suffix) {
-    return s.substr(s.rfind(suffix)) == suffix;
+    auto pos = s.rfind(suffix);
+    return pos != string::npos && s.substr(pos) == suffix;
 }
 
 void map_files_0(const string &path, map<long long, string> &file_map) {
@@ -85,11 +86,17 @@ int cpp_main() {
     for (const auto &item: file_map) {
         std::printf("cpp style --->%lld: %s\n", item.first, item.second.c_str());
     }
-    string xyt("0x06000000000007CA.xyt");
-    printf("%s ends with '.xyt': %d\n", xyt.c_str(), endsWith(xyt, string(".xyt")));
-    printf("%s starts with '0x': %d\n", xyt.c_str(), startsWith(xyt, string("0x")));
-    xyt = "00xddd.xytt";
-    printf("%s ends with '.xyt': %d\n", xyt.c_str(), endsWith(xyt, string(".xyt")));
-    printf("%s starts with '0x': %d\n", xyt.c_str(), startsWith(xyt, string("0x")));
+    string tester("0x06000000000007CA.xyt");
+    printf("%s starts with '0x': %d\n", tester.c_str(), startsWith(tester, "0x"));
+    printf("%s ends with '.xyt': %d\n", tester.c_str(), endsWith(tester, ".xyt"));
+    tester = "00xddd.xytt";
+    printf("%s starts with '0x': %d\n", tester.c_str(), startsWith(tester, "0x"));
+    printf("%s ends with '.xyt': %d\n", tester.c_str(), endsWith(tester, ".xyt"));
+    tester = "0xddd.xyt.json";
+    printf("%s starts with '0x': %d\n", tester.c_str(), startsWith(tester, "0x"));
+    printf("%s ends with '.xyt': %d\n", tester.c_str(), endsWith(tester, ".xyt"));
+    tester = "0dxddd.xyt";
+    printf("%s starts with '0x': %d\n", tester.c_str(), startsWith(tester, "0x"));
+    printf("%s ends with '.xyt': %d\n", tester.c_str(), endsWith(tester, ".xyt"));
     return 0;
 }
