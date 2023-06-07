@@ -18,43 +18,43 @@
 
 class Person {
 public:
-    virtual void speak() = 0;
+  virtual void speak() = 0;
 
-    virtual std::string toString() = 0;
+  virtual std::string toString() = 0;
 };
 
 class Ben : public Person {
 
 private:
-    std::string mName;
-    int mAge;
-    int mGender;
+  std::string mName;
+  int mAge;
+  int mGender;
 
 public:
-    Ben(std::string name, int age, int gender);
+  Ben(std::string name, int age, int gender);
 
-    std::string getName() {
-        return mName;
-    }
+  std::string getName() {
+    return mName;
+  }
 
-    int getAge() const {
-        return mAge;
-    }
+  int getAge() const {
+    return mAge;
+  }
 
-    int getGender() const {
-        return mGender;
-    }
+  int getGender() const {
+    return mGender;
+  }
 
-    void speak() override;
+  void speak() override;
 
-    std::string toString() override;
+  std::string toString() override;
 
-    ~Ben() {
-        mName = "";
-        mAge = 0;
-        mGender = 0;
-        std::cout << "Ben's destructor is invoked." << std::endl;
-    }
+  ~Ben() {
+    mName = "";
+    mAge = 0;
+    mGender = 0;
+    std::cout << "Ben's destructor is invoked." << std::endl;
+  }
 };
 
 void person_main();

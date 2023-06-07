@@ -12,8 +12,8 @@ void basic();
 
 // 枚举类型
 enum DAY {
-    // 后续的值会依次递增 1
-    MON = 1, TUE, WED, THU, FRI, SAT, SUN
+  // 后续的值会依次递增 1
+  MON = 1, TUE, WED, THU, FRI, SAT, SUN
 };
 
 /**
