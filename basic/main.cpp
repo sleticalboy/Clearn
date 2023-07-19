@@ -101,6 +101,23 @@ long long parseTemplateId(const string &name) {
   return -1L;
 }
 
+string getName(const string &path) {
+  auto pos = path.rfind('/');
+  if (pos != string::npos) {
+    return path.substr(pos + 1);
+  }
+  return path;
+}
+
+string getExt(const string &path) {
+  auto name = getName(path);
+  auto pos = name.rfind('.');
+  if (pos != string::npos) {
+    return name.substr(pos + 1);
+  }
+  return "";
+}
+
 int cpp_main() {
   cpp_string();
   person_main();
@@ -132,5 +149,19 @@ int cpp_main() {
   printf("'648518346341352029' -> %llx\n", parseTemplateId("648518346341352029"));
   printf("'0400600000001FF1' -> %llx\n", parseTemplateId("0400600000001FF1"));
   printf("'0x0400600000001FF1' -> %llx\n", parseTemplateId("0x0400600000001FF1"));
+
+  // 获取文件名测试
+  printf("/home/me/a.txt -> name: %s\n", getName("a.txt").c_str());
+  printf("a.jpg -> name: %s\n", getName("a.jpg").c_str());
+  printf("/home/me/a.png -> name: %s\n", getName("a.png").c_str());
+  // 获取文件后缀测试
+  printf("a.txt -> ext: %s\n", getExt("a.txt").c_str());
+  printf("a.jpg -> ext: %s\n", getExt("a.jpg").c_str());
+  printf("a.png -> ext: %s\n", getExt("a.png").c_str());
+  printf("https://www.example.com/home/a.dat -> ext: %s\n", getExt("http://www.example.com/home/a.dat").c_str());
+  printf("https://www.example.com/home/a.exe -> ext: %s\n", getExt("http://www.example.com/home/a.exe").c_str());
+  printf("https://www.example.com/home/a.html -> ext: %s\n", getExt("http://www.example.com/home/a.html").c_str());
+  printf("https://www.example.com/home/a. -> ext: %s\n", getExt("http://www.example.com/home/a.").c_str());
+  printf("https://www.example.com/home/a -> ext: %s\n", getExt("http://www.example.com/home/a").c_str());
   return 0;
 }
