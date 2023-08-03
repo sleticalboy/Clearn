@@ -163,5 +163,13 @@ int cpp_main() {
   printf("https://www.example.com/home/a.html -> ext: %s\n", getExt("http://www.example.com/home/a.html").c_str());
   printf("https://www.example.com/home/a. -> ext: %s\n", getExt("http://www.example.com/home/a.").c_str());
   printf("https://www.example.com/home/a -> ext: %s\n", getExt("http://www.example.com/home/a").c_str());
+
+  try {
+    // throws std::length_error
+    std::string("abc").substr(10);
+  } catch (const std::exception &e) {
+    // reference to the base of a polymorphic object
+    printf("catch exception: '%s'\n", e.what());
+  }
   return 0;
 }

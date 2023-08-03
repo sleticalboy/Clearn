@@ -40,7 +40,7 @@ void ptr_type() {
   int *null_ptr = NULL;
   printf("null pointer is %p\n", null_ptr);
   // 空指针的内存地址是 0x00
-  printf("null pointer's address is %lu\n", null_ptr);
+  printf("null pointer's address is %p\n", null_ptr);
 
   // 判断空指针
   if (null_ptr == 0) {
