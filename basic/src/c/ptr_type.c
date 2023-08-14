@@ -105,10 +105,10 @@ void callback_fun() {
         }
     }
 
-    public static void main(String[] args) {
-        final Main main = new Main();
+    public static void c(String[] args) {
+        final Main c = new Main();
         final int[] array = new int[10];
-        main.fillArray(array, new Generator() {
+        c.fillArray(array, new Generator() {
 
             @Override
             public int generate() {

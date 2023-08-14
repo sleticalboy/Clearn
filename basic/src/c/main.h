@@ -9,7 +9,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-extern int c_main();
+extern int c_samples();
 #ifdef __cplusplus
 }
 #endif

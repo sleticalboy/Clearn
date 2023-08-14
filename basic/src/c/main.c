@@ -4,17 +4,17 @@
 
 #include <stdio.h>
 
-#include "src/main/str_type.h"
-#include "src/main/data_type.h"
-#include "src/main/ptr_type.h"
-#include "src/main/struct_type.h"
-#include "src/main/macro_type.h"
-#include "src/main/file_type.h"
-#include "src/main/variable_args.h"
-#include "src/main/mem_manage.h"
-#include "src/main/thread.h"
+#include "str_type.h"
+#include "data_type.h"
+#include "ptr_type.h"
+#include "struct_type.h"
+#include "macro_type.h"
+#include "file_type.h"
+#include "variable_args.h"
+#include "mem_manage.h"
+#include "thread.h"
 
-#include "src/algorithm/fibonacci.h"
+#include "algorithm/fibonacci.h"
 
 #include "main.h"
 
@@ -22,7 +22,7 @@ void basic_main();
 
 void alg_main();
 
-int c_main() {
+int c_samples() {
     // 基础
     basic_main();
     // 算法
@@ -71,4 +71,9 @@ void basic_main() {
 
     printf("\n>>>>>about thread usage>>>>>>\n");
     thread_main();
+}
+
+int main() {
+  // c 语言
+  return c_samples();
 }
