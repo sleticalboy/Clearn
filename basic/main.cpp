@@ -12,6 +12,7 @@
 #include <string>
 #include <filesystem>
 #include <sys/stat.h>
+#include <vector>
 
 using namespace std;
 namespace fs = std::__fs::filesystem;
@@ -118,11 +119,46 @@ string getExt(const string &path) {
   return "";
 }
 
+void search_files(const std::string &path, std::vector<std::string> &output, const std::string &ext, bool single = true) {
+
+  if (single && !output.empty()) return;
+
+  struct stat sb{};
+  if (stat(path.c_str(), &sb) != 0) {
+    return;
+  }
+  if ((sb.st_mode & S_IFDIR) != 0) {
+    DIR *dir = opendir(path.c_str());
+    struct dirent *f;
+    while ((f = readdir(dir)) != nullptr) {
+      // 过滤当前目录以及父目录，否则会导致死循环
+      if (strcmp(f->d_name, ".") == 0) continue;
+      if (strcmp(f->d_name, "..") == 0) continue;
+      search_files(path + "/" + f->d_name, output, ext, single);
+    }
+  } else if ((sb.st_mode & S_IFREG) != 0) {
+    if (endsWith(path, ext)) {
+      output.push_back(path);
+      if (single) return;
+    }
+  } else {
+    printf("%s() invalid file: %s\n", __func__, path.c_str());
+  }
+}
+
 int cpp_main() {
   cpp_string();
   person_main();
 
   string path("/home/binlee/Downloads/xyt");
+
+  auto targets = std::vector<std::string>();
+  search_files(path, targets, ".xyt", false);
+  for (const auto &item: targets) {
+    printf("xyt file: %s\n", item.c_str());
+  }
+  return 0;
+
   auto file_map = map<long long, string>();
   map_files(path, file_map);
   for (const auto &item: file_map) {
