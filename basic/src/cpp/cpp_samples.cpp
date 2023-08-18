@@ -26,6 +26,37 @@ bool endsWith(const std::string &s, const std::string &suffix) {
   return pos != std::string::npos && s.substr(pos) == suffix;
 }
 
+void traversalDir(const std::string &path, const std::function<void(const std::string &)> &file_handler,
+                  const std::function<bool()> &break_handler = []() { return false; },
+                  bool recursive = false, int level = 0) {
+
+  if (break_handler != nullptr && break_handler()) return;
+
+  struct stat sb{};
+  if (stat(path.c_str(), &sb) != 0) return;
+
+  if ((sb.st_mode & S_IFREG) != 0) {
+    // 直接处理文件
+    if (file_handler != nullptr) file_handler(path);
+    if (break_handler != nullptr && break_handler()) return;
+  } else if ((sb.st_mode & S_IFDIR) != 0) {
+    // 不需要递归，直接返回
+    if (!recursive && level != 0) return;
+    // 目录层级递增 1
+    level++;
+    // 递归目录
+    DIR *dir = opendir(path.c_str());
+    struct dirent *f;
+    while ((f = readdir(dir)) != nullptr) {
+      // 过滤当前目录以及父目录，否则会导致死循环
+      if (strcmp(f->d_name, ".") == 0 || strcmp(f->d_name, "..") == 0) continue;
+      traversalDir(path + "/" + f->d_name, file_handler, break_handler, recursive, level);
+    }
+  } else {
+    printf("%s() invalid file: %s\n", __func__, path.c_str());
+  }
+}
+
 void map_files_0(const std::string &path, std::map<long long, std::string> &file_map) {
   auto map_ttid = [&](const std::string &name) {
     size_t left = name.find("0x");
@@ -46,29 +77,14 @@ void map_files_0(const std::string &path, std::map<long long, std::string> &file
 }
 
 void map_files(const std::string &path, std::map<long long, std::string> &file_map) {
-  struct stat sb{};
-  if (stat(path.c_str(), &sb) != 0) {
-    return;
-  }
-  if ((sb.st_mode & S_IFDIR) != 0) {
-    DIR *dir = opendir(path.c_str());
-    struct dirent *f;
-    while ((f = readdir(dir)) != nullptr) {
-      // 过滤当前目录以及父目录
-      if (strcmp(f->d_name, ".") == 0) continue;
-      if (strcmp(f->d_name, "..") == 0) continue;
-      map_files(path + "/" + f->d_name, file_map);
-    }
-  } else if ((sb.st_mode & S_IFREG) != 0) {
-    size_t left = path.find("0x");
-    size_t right = path.rfind(".xyt");
+  traversalDir(path, [&](const std::string &fp) {
+    auto left = fp.find("0x");
+    auto right = fp.rfind(".xyt");
     if (right != std::string::npos && right > left) {
-      long long n = std::strtoll(path.substr(left, right).c_str(), nullptr, 16);
-      file_map.insert(std::pair<long long, std::string>(n, path));
+      long long n = std::strtoll(fp.substr(left, right).c_str(), nullptr, 16);
+      file_map.insert(std::pair<long long, std::string>(n, fp));
     }
-  } else {
-    printf("%s() invalid file: %s\n", __func__, path.c_str());
-  }
+  }, []() { return false; }, true);
 }
 
 long long parseTemplateId(const std::string &name) {
@@ -109,32 +125,12 @@ std::string getExt(const std::string &path) {
 
 void search_files(const std::string &path, std::vector<std::string> &output, const std::string &ext,
                   bool single = true) {
-
-  if (single && !output.empty()) return;
-
-  struct stat sb{};
-  if (stat(path.c_str(), &sb) != 0) {
-    return;
-  }
-  if ((sb.st_mode & S_IFDIR) != 0) {
-    DIR *dir = opendir(path.c_str());
-    struct dirent *f;
-    while ((f = readdir(dir)) != nullptr) {
-      // 过滤当前目录以及父目录，否则会导致死循环
-      if (strcmp(f->d_name, ".") == 0) continue;
-      if (strcmp(f->d_name, "..") == 0) continue;
-      search_files(path + "/" + f->d_name, output, ext, single);
-    }
-  } else if ((sb.st_mode & S_IFREG) != 0) {
-    if (endsWith(path, ext)) {
-      output.push_back(path);
-      if (single) return;
-    }
-  } else {
-    printf("%s() invalid file: %s\n", __func__, path.c_str());
-  }
+  traversalDir(path, [&](const std::string &fp) {
+    if (endsWith(fp, ext)) output.push_back(fp);
+  }, [&]() {
+    return single && !output.empty();
+  });
 }
-
 
 int cpp_samples() {
 
@@ -144,13 +140,11 @@ int cpp_samples() {
   person_main();
 
   std::string path("/home/binlee/Downloads/xyt");
-
   auto targets = std::vector<std::string>();
   search_files(path, targets, ".xyt", false);
   for (const auto &item: targets) {
     printf("xyt file: %s\n", item.c_str());
   }
-  return 0;
 
   auto file_map = std::map<long long, std::string>();
   map_files(path, file_map);
@@ -204,6 +198,15 @@ int cpp_samples() {
   } catch (const std::exception &e) {
     // reference to the base of a polymorphic object
     printf("catch exception: '%s'\n", e.what());
+  }
+
+  auto p = std::string("/tmp/3de1c8ca-c64c-49c5-80cb-9e6d6d0dc75f/0x01000000000022BA/0x47800000000022BA/music.mp3");
+  // auto p = std::string("/music.mp3");
+  if (getName(p) == "music.mp3") {
+    auto pos = p.rfind('/', p.rfind('/') - 1);
+    auto n = p.substr(pos + 1);
+    printf("absolute path is: %s\n", p.c_str());
+    printf("relative path is: %s\n", n.c_str());
   }
   return 0;
 }
