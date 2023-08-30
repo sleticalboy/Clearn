@@ -9,10 +9,10 @@
 #include <filesystem>
 #include <sys/stat.h>
 #include <vector>
+#include <csignal>
+#include <sys/inotify.h>
 
 #include "cpp_samples.h"
-#include "cpp_string.h"
-#include "Person.h"
 
 namespace fs = std::__fs::filesystem;
 
@@ -230,6 +230,81 @@ void pipe_test() {
   pclose(fd);
 }
 
+void file_observer_test() {
+  auto cwd = getcwd(nullptr, 0);
+  std::string prj_root = fs::path(cwd).parent_path();
+  std::cout << "cwd: " << cwd << ", prj root: " << prj_root << std::endl;
+  if (cwd != nullptr) {
+    free(cwd);
+  }
+
+  int fd = inotify_init1(IN_NONBLOCK);
+  if (fd == -1) {
+    std::cerr << "Failed to initialize fd observer.\n";
+  }
+  std::cout << "Initialize observer fd: " << fd << std::endl;
+  int watched_fd = inotify_add_watch(fd, (prj_root + "/testdata").data(), IN_MODIFY | IN_CREATE);
+  if (watched_fd == -1) {
+    std::cerr << "Failed to add path to observer.\n";
+    close(fd);
+    return;
+  }
+  char buf[128];
+  while (true) {
+    ssize_t rs = read(fd, buf, sizeof(buf));
+    std::cout << "File was written bytes: " << rs << std::endl;
+    if (rs > 0) {
+      unsigned long offset = 0;
+      while (offset < rs) {
+        auto event = (inotify_event *) &buf[offset];
+        // if (event->wd == watched_fd && event->mask & IN_CLOSE_WRITE) {
+        // }
+        std::cout << "File was written even: " << event->name << std::endl;
+        offset += sizeof(struct inotify_event) + event->len;
+      }
+    } else {
+      std::cerr << "read err, continue.\n";
+      // break;
+    }
+    usleep(1500000);
+  }
+
+  // pthread_t observer_t;
+  // pthread_create(&observer_t, nullptr, [](void *data) {
+  //   int *fd = (int *) data;
+  //   std::cout << "observer proc enter with fd: " << *fd << std::endl;
+  //   char buf[128];
+  //   while (true) {
+  //     ssize_t rs = read(*fd, buf, sizeof(buf));
+  //     std::cout << "File was written bytes: " << rs << std::endl;
+  //     if (rs > 0) {
+  //       std::cout << "File was written data: " << buf << std::endl;
+  //     } else {
+  //       // std::cerr << "read err, continue.\n";
+  //       // break;
+  //     }
+  //   }
+  //   return (void *) nullptr;
+  // }, &fd);
+
+  // pthread_t cmd_t;
+  // pthread_create(&cmd_t, nullptr, [](void *data) {
+  //   std::string cmd = std::string("python3 ") + (char *)(data) + "/scripts/write_file.py";
+  //   std::cout << "cmd is: " << cmd << std::endl;
+  //   int res = system(cmd.data());
+  //   std::cout << "cmd exit with: " << res << std::endl;
+  //   return (void *) nullptr;
+  // }, (void *) prj_root.data());
+
+  // 等待子线程执行完成
+  // pthread_join(observer_t, nullptr);
+  // pthread_join(cmd_t, nullptr);
+
+  // 关闭文件句柄
+  close(fd);
+  std::cout << __func__ << "() exit.\n";
+}
+
 int cpp_samples() {
   std::cout << "\n>>>>>>>Welcome to C++ World!<<<<<<<<\n" << std::endl;
 
@@ -242,7 +317,8 @@ int cpp_samples() {
   // get_file_ext_test();
   // try_catch_test();
   // trim_path_test();
-  pipe_test();
+  // pipe_test();
+  file_observer_test();
 
   return 0;
 }
