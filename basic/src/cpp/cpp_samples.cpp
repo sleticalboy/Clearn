@@ -132,13 +132,7 @@ void search_files(const std::string &path, std::vector<std::string> &output, con
   });
 }
 
-int cpp_samples() {
-
-  std::cout << "\n>>>>>>>Welcome to C++ World!<<<<<<<<" << std::endl;
-
-  cpp_string();
-  person_main();
-
+void search_test() {
   std::string path("/home/binlee/Downloads/xyt");
   auto targets = std::vector<std::string>();
   search_files(path, targets, ".xyt", false);
@@ -156,6 +150,9 @@ int cpp_samples() {
   for (const auto &item: file_map) {
     std::printf("cpp style --->%lld: %s\n", item.first, item.second.c_str());
   }
+}
+
+void match_test() {
   std::string tester("0x06000000000007CA.xyt");
   printf("%s starts with '0x': %d\n", tester.c_str(), startsWith(tester, "0x"));
   printf("%s ends with '.xyt': %d\n", tester.c_str(), endsWith(tester, ".xyt"));
@@ -168,15 +165,22 @@ int cpp_samples() {
   tester = "0dxddd.xyt";
   printf("%s starts with '0x': %d\n", tester.c_str(), startsWith(tester, "0x"));
   printf("%s ends with '.xyt': %d\n", tester.c_str(), endsWith(tester, ".xyt"));
+}
 
+void parse_test() {
   printf("'648518346341352029' -> %llx\n", parseTemplateId("648518346341352029"));
   printf("'0400600000001FF1' -> %llx\n", parseTemplateId("0400600000001FF1"));
   printf("'0x0400600000001FF1' -> %llx\n", parseTemplateId("0x0400600000001FF1"));
+}
 
+void get_file_name_test() {
   // 获取文件名测试
   printf("/home/me/a.txt -> name: %s\n", getName("a.txt").c_str());
   printf("a.jpg -> name: %s\n", getName("a.jpg").c_str());
   printf("/home/me/a.png -> name: %s\n", getName("a.png").c_str());
+}
+
+void get_file_ext_test() {
   // 获取文件后缀测试
   printf("a.txt -> ext: %s\n", getExt("a.txt").c_str());
   printf("a.jpg -> ext: %s\n", getExt("a.jpg").c_str());
@@ -191,7 +195,9 @@ int cpp_samples() {
          getExt("http://www.example.com/home/a.").c_str());
   printf("https://www.example.com/home/a -> ext: %s\n",
          getExt("http://www.example.com/home/a").c_str());
+}
 
+void try_catch_test() {
   try {
     // throws std::length_error
     std::string("abc").substr(10);
@@ -199,7 +205,9 @@ int cpp_samples() {
     // reference to the base of a polymorphic object
     printf("catch exception: '%s'\n", e.what());
   }
+}
 
+void trim_path_test() {
   auto p = std::string("/tmp/3de1c8ca-c64c-49c5-80cb-9e6d6d0dc75f/0x01000000000022BA/0x47800000000022BA/music.mp3");
   // auto p = std::string("/music.mp3");
   if (getName(p) == "music.mp3") {
@@ -208,6 +216,34 @@ int cpp_samples() {
     printf("absolute path is: %s\n", p.c_str());
     printf("relative path is: %s\n", n.c_str());
   }
+}
+
+void pipe_test() {
+  auto fd = popen("ls -alh .", "r");
+  if (fd == nullptr) {
+    std::cerr << "Create pipe error." << std::endl;
+  }
+  char buf[1024];
+  while (fgets(buf, sizeof(buf), fd) != nullptr) {
+    std::cout << buf;
+  }
+  pclose(fd);
+}
+
+int cpp_samples() {
+  std::cout << "\n>>>>>>>Welcome to C++ World!<<<<<<<<\n" << std::endl;
+
+  // cpp_string();
+  // person_main();
+  // search_test();
+  // match_test();
+  // parse_test();
+  // get_file_name_test();
+  // get_file_ext_test();
+  // try_catch_test();
+  // trim_path_test();
+  pipe_test();
+
   return 0;
 }
 
