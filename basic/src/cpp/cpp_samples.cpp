@@ -10,6 +10,7 @@
 #include <sys/stat.h>
 #include <vector>
 #include <csignal>
+#include <sys/epoll.h>
 #include <sys/inotify.h>
 
 #include "cpp_samples.h"
@@ -230,6 +231,146 @@ void pipe_test() {
   pclose(fd);
 }
 
+struct UserData {
+  int epoll_fd;
+  int inotify_fd;
+};
+
+const char *map_epoll_events(uint32_t events) {
+  char *buf = new char[1024];
+  int offset = 0;
+  if (events & EPOLLIN) {
+    offset += sprintf(buf + offset, "EPOLLIN|");
+  }
+  if (events & EPOLLPRI) {
+    offset += sprintf(buf + offset, "EPOLLPRI|");
+  }
+  if (events & EPOLLRDNORM) {
+    offset += sprintf(buf + offset, "EPOLLRDNORM|");
+  }
+  if (events & EPOLLRDBAND) {
+    offset += sprintf(buf + offset, "EPOLLRDBAND|");
+  }
+  if (events & EPOLLWRNORM) {
+    offset += sprintf(buf + offset, "EPOLLWRNORM|");
+  }
+  if (events & EPOLLWRBAND) {
+    offset += sprintf(buf + offset, "EPOLLWRBAND|");
+  }
+  if (events & EPOLLMSG) {
+    offset += sprintf(buf + offset, "EPOLLMSG|");
+  }
+  if (events & EPOLLERR) {
+    offset += sprintf(buf + offset, "EPOLLERR|");
+  }
+  if (events & EPOLLHUP) {
+    offset += sprintf(buf + offset, "EPOLLHUP|");
+  }
+  if (events & EPOLLRDHUP) {
+    offset += sprintf(buf + offset, "EPOLLRDHUP|");
+  }
+  if (events & EPOLLEXCLUSIVE) {
+    offset += sprintf(buf + offset, "EPOLLEXCLUSIVE|");
+  }
+  if (events & EPOLLWAKEUP) {
+    offset += sprintf(buf + offset, "EPOLLWAKEUP|");
+  }
+  if (events & EPOLLONESHOT) {
+    offset += sprintf(buf + offset, "EPOLLONESHOT|");
+  }
+  if (events & EPOLLET) {
+    offset += sprintf(buf + offset, "EPOLLET|");
+  }
+  return buf;
+}
+
+void dump_epoll_event(int index, struct epoll_event *e) {
+  printf("epoll event[%d] -> events: %s, fd: %d, ptr: %s, u32: %d, u64: %lu\n",
+         index, map_epoll_events(e->events), e->data.fd, (char *) e->data.ptr, e->data.u32, e->data.u64);
+}
+
+const char *map_inotify_mask(uint32_t mask) {
+  char *buf = new char[1024];
+  int offset = 0;
+  if (mask & IN_ACCESS) {
+    offset += sprintf(buf + offset, "IN_ACCESS|");
+  }
+  if (mask & IN_MODIFY) {
+    offset += sprintf(buf + offset, "IN_MODIFY|");
+  }
+  if (mask & IN_ATTRIB) {
+    offset += sprintf(buf + offset, "IN_ATTRIB|");
+  }
+  if (mask & IN_CLOSE_WRITE) {
+    offset += sprintf(buf + offset, "IN_CLOSE_WRITE|");
+  }
+  if (mask & IN_CLOSE_NOWRITE) {
+    offset += sprintf(buf + offset, "IN_CLOSE_NOWRITE|");
+  }
+  if (mask & IN_CLOSE) {
+    offset += sprintf(buf + offset, "IN_CLOSE|");
+  }
+  if (mask & IN_OPEN) {
+    offset += sprintf(buf + offset, "IN_OPEN|");
+  }
+  if (mask & IN_MOVED_FROM) {
+    offset += sprintf(buf + offset, "IN_MOVED_FROM|");
+  }
+  if (mask & IN_MOVED_TO) {
+    offset += sprintf(buf + offset, "IN_MOVED_TO|");
+  }
+  if (mask & IN_MOVE) {
+    offset += sprintf(buf + offset, "IN_MOVE|");
+  }
+  if (mask & IN_CREATE) {
+    offset += sprintf(buf + offset, "IN_CREATE|");
+  }
+  if (mask & IN_DELETE) {
+    offset += sprintf(buf + offset, "IN_DELETE|");
+  }
+  if (mask & IN_DELETE_SELF) {
+    offset += sprintf(buf + offset, "IN_DELETE_SELF|");
+  }
+  if (mask & IN_MOVE_SELF) {
+    offset += sprintf(buf + offset, "IN_MOVE_SELF");
+  }
+  // if (mask & IN_ALL_EVENTS) {
+  //   offset += sprintf(buf + offset, "IN_ALL_EVENTS|");
+  // }
+  return buf;
+}
+
+void dump_inotify_event(int index, struct inotify_event *e) {
+  printf("inotify event[%d] -> name: '%s', fd: %d, masks: %s, len: %d, cookie: %d\n",
+         index, e->name, e->wd, map_inotify_mask(e->mask), e->len, e->cookie);
+}
+
+void inotify_event_handler(int inotify_fd) {
+  // 读取 inotify 事件
+  struct inotify_event buf[8];
+  int rs = (int) read(inotify_fd, buf, sizeof(buf));
+  if (rs > 0) {
+    int N = rs / (int) sizeof(struct inotify_event);
+    std::cout << "read " << N << " events, size: " << rs << " bytes" << std::endl;
+    for (int j = 0; j < N; ++j) {
+      auto event = (struct inotify_event *) &buf[j];
+      dump_inotify_event(j, event);
+    }
+  } else {
+    std::cerr << "read err, continue.\n";
+  }
+}
+
+void epoll_event_handler(int num, struct epoll_event event_buf[], int inotify_fd) {
+  std::cout << "epoll_event_handler() received " << num << " events." << std::endl;
+  for (int i = 0; i < num; ++i) {
+    // handle one epoll event
+    struct epoll_event e = event_buf[i];
+    dump_epoll_event(i, &e);
+    inotify_event_handler(inotify_fd);
+  }
+}
+
 void file_observer_test() {
   auto cwd = getcwd(nullptr, 0);
   std::string prj_root = fs::path(cwd).parent_path();
@@ -238,70 +379,73 @@ void file_observer_test() {
     free(cwd);
   }
 
-  int fd = inotify_init1(IN_NONBLOCK);
-  if (fd == -1) {
+  int epoll_fd = epoll_create1(EPOLL_CLOEXEC);
+  if (epoll_fd == -1) {
     std::cerr << "Failed to initialize fd observer.\n";
   }
-  std::cout << "Initialize observer fd: " << fd << std::endl;
-  int watched_fd = inotify_add_watch(fd, (prj_root + "/testdata").data(), IN_MODIFY | IN_CREATE);
+
+  int inotify_fd = inotify_init1(IN_CLOEXEC);
+  if (inotify_fd == -1) {
+    std::cerr << "Failed to initialize fd observer.\n";
+  }
+  std::cout << "Initialize observer fd: " << inotify_fd << std::endl;
+  int watched_fd = inotify_add_watch(inotify_fd, (prj_root + "/testdata").data(), IN_CLOSE_WRITE);
   if (watched_fd == -1) {
     std::cerr << "Failed to add path to observer.\n";
-    close(fd);
+    close(inotify_fd);
+    close(epoll_fd);
     return;
   }
-  char buf[128];
-  while (true) {
-    ssize_t rs = read(fd, buf, sizeof(buf));
-    std::cout << "File was written bytes: " << rs << std::endl;
-    if (rs > 0) {
-      unsigned long offset = 0;
-      while (offset < rs) {
-        auto event = (inotify_event *) &buf[offset];
-        // if (event->wd == watched_fd && event->mask & IN_CLOSE_WRITE) {
-        // }
-        std::cout << "File was written even: " << event->name << std::endl;
-        offset += sizeof(struct inotify_event) + event->len;
+  std::cout << "Initialize watched fd: " << watched_fd << std::endl;
+
+  struct epoll_event eevent{};
+  eevent.events = EPOLLIN | EPOLLWAKEUP;
+  eevent.data.fd = inotify_fd;
+  eevent.data.ptr = (void *) "hello, epoll";
+  epoll_ctl(epoll_fd, EPOLL_CTL_ADD, inotify_fd, &eevent);
+
+  struct UserData userData{
+      .epoll_fd = epoll_fd,
+      .inotify_fd = inotify_fd,
+  };
+
+  pthread_t observer_t;
+  pthread_create(&observer_t, nullptr, [](void *user) {
+    struct UserData *data = ((struct UserData *) user);
+    std::cout << "observer proc enter with efd: " << data->epoll_fd << ", ifd: " << data->inotify_fd << std::endl;
+    struct epoll_event event_buf[32];
+    while (true) {
+      // 等待 epoll 事件
+      int num = epoll_wait(data->epoll_fd, event_buf, 16, 5000);
+      if (num < 0) {
+        // failed
+        std::cerr << "epoll_wait() failed: " << errno << std::endl;
+        break;
+      } else if (num == 0) {
+        // timeout, no events received
+        std::cout << "epoll_wait() after 5000ms, timout..." << std::endl;
+        usleep(1500000);
+        continue;
+      } else {
+        // ok, num is events count
+        epoll_event_handler(num, event_buf, data->inotify_fd);
+        usleep(1500000);
       }
-    } else {
-      std::cerr << "read err, continue.\n";
-      // break;
     }
-    usleep(1500000);
-  }
+    return (void *) nullptr;
+  }, &userData);
 
-  // pthread_t observer_t;
-  // pthread_create(&observer_t, nullptr, [](void *data) {
-  //   int *fd = (int *) data;
-  //   std::cout << "observer proc enter with fd: " << *fd << std::endl;
-  //   char buf[128];
-  //   while (true) {
-  //     ssize_t rs = read(*fd, buf, sizeof(buf));
-  //     std::cout << "File was written bytes: " << rs << std::endl;
-  //     if (rs > 0) {
-  //       std::cout << "File was written data: " << buf << std::endl;
-  //     } else {
-  //       // std::cerr << "read err, continue.\n";
-  //       // break;
-  //     }
-  //   }
-  //   return (void *) nullptr;
-  // }, &fd);
-
-  // pthread_t cmd_t;
-  // pthread_create(&cmd_t, nullptr, [](void *data) {
-  //   std::string cmd = std::string("python3 ") + (char *)(data) + "/scripts/write_file.py";
-  //   std::cout << "cmd is: " << cmd << std::endl;
-  //   int res = system(cmd.data());
-  //   std::cout << "cmd exit with: " << res << std::endl;
-  //   return (void *) nullptr;
-  // }, (void *) prj_root.data());
+  // std::string cmd = std::string("python3 ") + prj_root + "/scripts/write_file.py";
+  // std::cout << "cmd is: " << cmd << std::endl;
+  // int res = system(cmd.data());
+  // std::cout << "cmd exit with: " << res << std::endl;
 
   // 等待子线程执行完成
-  // pthread_join(observer_t, nullptr);
-  // pthread_join(cmd_t, nullptr);
+  pthread_join(observer_t, nullptr);
 
   // 关闭文件句柄
-  close(fd);
+  close(inotify_fd);
+  close(epoll_fd);
   std::cout << __func__ << "() exit.\n";
 }
 
@@ -322,4 +466,3 @@ int cpp_samples() {
 
   return 0;
 }
-
