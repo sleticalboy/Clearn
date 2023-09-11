@@ -449,6 +449,19 @@ void file_observer_test() {
   std::cout << __func__ << "() exit.\n";
 }
 
+void read_file_test() {
+  auto cwd = getcwd(nullptr, 0);
+  std::string prj_root = fs::path(cwd).parent_path();
+  auto test_file = prj_root + "/testdata/results.json";
+  // 打开文件
+  auto fp = fopen(test_file.data(), "rb");
+  struct stat s{};
+  stat(test_file.data(), &s);
+  char buf[s.st_size];
+  fread(buf, sizeof(buf), sizeof(*buf), fp);
+  std::cout << "file size: " << s.st_size << " is: " << buf << std::endl;
+}
+
 int cpp_samples() {
   std::cout << "\n>>>>>>>Welcome to C++ World!<<<<<<<<\n" << std::endl;
 
@@ -462,7 +475,8 @@ int cpp_samples() {
   // try_catch_test();
   // trim_path_test();
   // pipe_test();
-  file_observer_test();
+  // file_observer_test();
+  read_file_test();
 
   return 0;
 }
