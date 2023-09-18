@@ -13,6 +13,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread -fPIC -stdlib=libc++
 
 # 包含以下源码目录
 include_directories(src/)
+include_directories(include)
 
 # 递归目录中符合条件的文件
 file(GLOB_RECURSE SRCS "src/*.h" "src/*.c" "src/*.cpp")

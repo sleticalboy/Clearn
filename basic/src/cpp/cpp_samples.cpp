@@ -12,8 +12,12 @@
 #include <csignal>
 #include <sys/epoll.h>
 #include <sys/inotify.h>
+#include <sstream>
 
 #include "cpp_samples.h"
+
+// json
+#include "nlohmann/json.hpp"
 
 namespace fs = std::__fs::filesystem;
 
@@ -219,16 +223,19 @@ void trim_path_test() {
   }
 }
 
-void pipe_test() {
-  auto fd = popen("ls -alh .", "r");
+std::string pipe_test(const std::string &cmd) {
+  auto fd = popen(cmd.c_str(), "r");
   if (fd == nullptr) {
     std::cerr << "Create pipe error." << std::endl;
   }
+  std::stringstream ss;
   char buf[1024];
   while (fgets(buf, sizeof(buf), fd) != nullptr) {
-    std::cout << buf;
+    ss << buf;
   }
+  // std::cout << ss.str() << std::endl;
   pclose(fd);
+  return ss.str();
 }
 
 struct UserData {
@@ -462,6 +469,16 @@ void read_file_test() {
   std::cout << "file size: " << s.st_size << " is: " << buf << std::endl;
 }
 
+void json_test() {
+  auto j = nlohmann::json::parse(R"({"hello": "World", "world": "Hello", "duration": 2.79})");
+  std::string h = j["hello"].get<std::string>();
+  printf("%s() hello is : %s\n", __func__, h.c_str());
+  std::string w = j["hello"].get<std::string>();
+  printf("%s() world is : %s\n", __func__, w.c_str());
+  float duration = j["duration"].get<float>();
+  printf("%s() duration is : %.2f\n", __func__, duration);
+}
+
 int cpp_samples() {
   std::cout << "\n>>>>>>>Welcome to C++ World!<<<<<<<<\n" << std::endl;
 
@@ -474,9 +491,13 @@ int cpp_samples() {
   // get_file_ext_test();
   // try_catch_test();
   // trim_path_test();
-  // pipe_test();
+  std::cout << pipe_test("ls -alh .") << std::endl;
   // file_observer_test();
-  read_file_test();
+  // read_file_test();
+  json_test();
+
+  auto r = pipe_test("ffmpeg -version");
+  std::cout << r << std::endl;
 
   return 0;
 }
