@@ -13,6 +13,7 @@
 #include <sys/epoll.h>
 #include <sys/inotify.h>
 #include <sstream>
+#include <fstream>
 
 #include "cpp_samples.h"
 
@@ -234,7 +235,11 @@ std::string pipe_test(const std::string &cmd) {
     ss << buf;
   }
   // std::cout << ss.str() << std::endl;
-  pclose(fd);
+
+  // pclose() 返回该命令执行返回值，0 表示成功，其他表示失败
+  int res = pclose(fd);
+  std::cout << cmd << " exit with: " << res << std::endl;
+  if (res != 0) return {};
   return ss.str();
 }
 
@@ -470,18 +475,71 @@ void read_file_test() {
 }
 
 void json_test() {
-  auto j = nlohmann::json::parse(R"({"hello": "World", "world": "Hello", "duration": 2.79})");
+  // 从字符串解析
+  auto j = nlohmann::json::parse(R"({"hello":"World","world":"Hello","duration": 2.79})");
   std::string h = j["hello"].get<std::string>();
   printf("%s() hello is : %s\n", __func__, h.c_str());
   std::string w = j["hello"].get<std::string>();
   printf("%s() world is : %s\n", __func__, w.c_str());
   float duration = j["duration"].get<float>();
   printf("%s() duration is : %.2f\n", __func__, duration);
+  std::cout << j.dump() << std::endl;
+  // 从文件解析
+  std::ifstream fs("/home/binlee/code/Clearn/basic/testdata/results.json");
+  j = nlohmann::json::parse(fs);
+  std::cout << j.dump() << std::endl;
+}
+
+void ffmpeg_reverse_test(const std::string &input_file, const std::string &output_file) {
+  auto tmp_dir = std::string ("/tmp/") + std::to_string(random()) + "x" + std::to_string(random());
+  std::cout << "tmp dir: " << tmp_dir << std::endl;
+  pipe_test("mkdir -p " + tmp_dir);
+  // 1、 获取视频时长并计算文件分片数
+  auto _command = std::string("ffprobe -show_format -show_streams -of json ") + input_file;
+  auto probe = nlohmann::json::parse(pipe_test(_command));
+  assert(probe.is_object());
+  auto duration = std::stof(probe["format"]["duration"].get<std::string>()) * 1000;
+  std::cout << "duration is: " << duration << "ms" << std::endl;
+  std::cout << "segments: " << ceilf(duration / 5000);
+  auto part_files = std::vector<std::string>((int) ceilf(duration / 5000));
+  auto part_rfiles = std::vector<std::string>(part_files.capacity());
+  {
+    for (int i = 0; i < part_files.capacity(); ++i) {
+      part_files[i] = tmp_dir + "/part-" + std::to_string(i) + ".mp4";
+      part_rfiles[i] = tmp_dir + "/part-r-" + std::to_string(i) + ".mp4";
+    }
+  }
+  // 2、切割视频
+  // ffmpeg -i input.mp4 -c copy -map 0 -segment_time 300 -f segment output%d.mp4
+  pipe_test(std::string("ffmpeg -i ") + input_file + " -c copy -map 0 -segment_time 5 -f segment -y " +
+            tmp_dir + "/part-%d.mp4 >/dev/null");
+  // 3、分段倒放
+  for (int i = 0; i < part_files.size(); ++i) {
+    // ffmpeg -i output1.mp4 -vf reverse reversed_output1.mp4
+    pipe_test("ffmpeg -i " + part_files[i] + " -vf reverse -y " + part_rfiles[i] + " >/dev/null");
+  }
+  // 4.1、倒放后的视频逆序后合并
+  std::reverse(part_rfiles.begin(), part_rfiles.end());
+  auto merge_file = tmp_dir + "/all-r-files.txt";
+  auto fs = std::ofstream(merge_file);
+  if (!fs.is_open()) return;
+  for (const auto &prf: part_rfiles) {
+    fs << "file '" << prf << "'" << std::endl;
+  }
+  fs.close();
+  // 4.2、合并视频
+  // ffmpeg -i "concat:reversed_output1.mp4|reversed_output2.mp4|reversed_output3.mp4" -c copy reversed_full.mp4
+  pipe_test("ffmpeg -f concat -safe 0 -i " + merge_file + " -c copy -y " + output_file + " >/dev/null");
+
+  // 播放倒放后的视频
+  std::cout << pipe_test("ls -alh " + tmp_dir) << std::endl;
+  pipe_test("ffplay " + output_file);
+
+  std::__fs::filesystem::remove_all(tmp_dir);
 }
 
 int cpp_samples() {
   std::cout << "\n>>>>>>>Welcome to C++ World!<<<<<<<<\n" << std::endl;
-
   // cpp_string();
   // person_main();
   // search_test();
@@ -491,13 +549,12 @@ int cpp_samples() {
   // get_file_ext_test();
   // try_catch_test();
   // trim_path_test();
-  std::cout << pipe_test("ls -alh .") << std::endl;
+  // std::cout << pipe_test("ls -alh .") << std::endl;
+  // std::cout << pipe_test("ffmpeg -version") << std::endl;
   // file_observer_test();
   // read_file_test();
   json_test();
-
-  auto r = pipe_test("ffmpeg -version");
-  std::cout << r << std::endl;
-
+  // pipe_test("ls -vervose");
+  ffmpeg_reverse_test("/home/binlee/Downloads/audio/dance-4k.mp4", "/tmp/dance-4k-reversed.mp4");
   return 0;
 }
