@@ -488,6 +488,28 @@ void json_test() {
   std::ifstream fs("/home/binlee/code/Clearn/basic/testdata/results.json");
   j = nlohmann::json::parse(fs);
   std::cout << j.dump() << std::endl;
+  fs.close();
+  std::vector<float> v = {1.0f, 2.0f, 3.0f};
+  v.push_back(4.0f);
+  v.push_back(5.0f);
+  v.push_back(6.0f);
+  std::cout << nlohmann::json(v).dump() << std::endl;
+  j = nlohmann::json();
+  j["arr"] = {1.0f, 2.0f, 3.0f};
+  j["str"] = "this is as string";
+  if (j["arr"].is_array()) {
+    std::cout << j["arr"].dump() << std::endl;
+    auto arr = j["arr"].get<std::vector<float>>();
+    for (const auto &item: arr) {
+      std::cout << item << std::endl;
+    }
+  }
+  j["obj"] = R"({"a":"a-","b":"b-"})"_json;
+  j["obj_"] = {
+      {"pi", 3.1415926},
+      {"happy", true}
+  };
+  std::cout << j.dump() << std::endl;
 }
 
 void ffmpeg_reverse_test(const std::string &input_file, const std::string &output_file) {
@@ -498,20 +520,19 @@ void ffmpeg_reverse_test(const std::string &input_file, const std::string &outpu
   auto _command = std::string("ffprobe -show_format -show_streams -of json ") + input_file;
   auto probe = nlohmann::json::parse(pipe_test(_command));
   assert(probe.is_object());
-  auto duration = std::stof(probe["format"]["duration"].get<std::string>()) * 1000;
+  auto dj = probe["format"]["duration"];
+  auto duration = dj.is_number_float() ? dj.get<float>() * 1000 : std::stof(dj.get<std::string>()) * 1000;
   std::cout << "duration is: " << duration << "ms" << std::endl;
   std::cout << "segments: " << ceilf(duration / 5000);
   auto part_files = std::vector<std::string>((int) ceilf(duration / 5000));
   auto part_rfiles = std::vector<std::string>(part_files.capacity());
-  {
-    for (int i = 0; i < part_files.capacity(); ++i) {
-      part_files[i] = tmp_dir + "/part-" + std::to_string(i) + ".mp4";
-      part_rfiles[i] = tmp_dir + "/part-r-" + std::to_string(i) + ".mp4";
-    }
+  for (int i = 0; i < part_files.capacity(); ++i) {
+    part_files[i] = tmp_dir + "/part-" + std::to_string(i) + ".mp4";
+    part_rfiles[i] = tmp_dir + "/part-r-" + std::to_string(i) + ".mp4";
   }
   // 2、切割视频
   // ffmpeg -i input.mp4 -c copy -map 0 -segment_time 300 -f segment output%d.mp4
-  pipe_test(std::string("ffmpeg -i ") + input_file + " -c copy -map 0 -segment_time 5 -f segment -y " +
+  pipe_test("ffmpeg -i " + input_file + " -c copy -map 0 -segment_time 5 -f segment -y " +
             tmp_dir + "/part-%d.mp4 >/dev/null");
   // 3、分段倒放
   for (int i = 0; i < part_files.size(); ++i) {
@@ -555,6 +576,6 @@ int cpp_samples() {
   // read_file_test();
   json_test();
   // pipe_test("ls -vervose");
-  ffmpeg_reverse_test("/home/binlee/Downloads/audio/dance-4k.mp4", "/tmp/dance-4k-reversed.mp4");
+  // ffmpeg_reverse_test("/home/binlee/Downloads/audio/dance-4k.mp4", "/tmp/dance-4k-reversed.mp4");
   return 0;
 }
