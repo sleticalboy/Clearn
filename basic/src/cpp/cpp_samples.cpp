@@ -474,6 +474,37 @@ void read_file_test() {
   std::cout << "file size: " << s.st_size << " is: " << buf << std::endl;
 }
 
+std::string time_format_test(float time) {
+  // 时间格式为： 00:01:30.500
+  int h = 0, m = 0;
+  if (time > 3600) {
+    h = (int) time / 3600;
+    time = time - h * 3600;
+  }
+  if (time > 60) {
+    m = (int) time / 60;
+    time = time - m * 60;
+  }
+  float s = time;
+  std::stringstream r;
+  if (h < 10) {
+    r << "0" << h << ":";
+  } else {
+    r << h << ":";
+  }
+  if (m < 10) {
+    r << "0" << m << ":";
+  } else {
+    r << m << ":";
+  }
+  if (s < 10) {
+    r << "0" << s;
+  } else {
+    r << s;
+  }
+  return r.str();
+}
+
 void json_test() {
   // 从字符串解析
   auto j = nlohmann::json::parse(R"({"hello":"World","world":"Hello","duration": 2.79})");
@@ -510,9 +541,14 @@ void json_test() {
       {"happy", true}
   };
   std::cout << j.dump() << std::endl;
+
+  // 写入文件中
+  std::ofstream o("/home/binlee/code/Clearn/basic/testdata/out.json");
+  o << j << std::endl;
+  o.close();
 }
 
-void ffmpeg_reverse_test(const std::string &input_file, const std::string &output_file) {
+void ffmpeg_reverse_video_test(const std::string &input_file, const std::string &output_file) {
   auto tmp_dir = std::string ("/tmp/") + std::to_string(random()) + "x" + std::to_string(random());
   std::cout << "tmp dir: " << tmp_dir << std::endl;
   pipe_test("mkdir -p " + tmp_dir);
@@ -559,6 +595,36 @@ void ffmpeg_reverse_test(const std::string &input_file, const std::string &outpu
   std::__fs::filesystem::remove_all(tmp_dir);
 }
 
+void ffmpeg_split_audio_test(const std::string &input_file, const std::string &config_file) {
+  // // ffmpeg -i input.mp3 -ss 00:01:30 -to 00:02:00 output.mp3
+  std::ifstream ifs(config_file);
+  auto json = nlohmann::json::parse(ifs);
+  ifs.close();
+
+  nlohmann::json split_result(json["data"]);
+  for (auto &item: split_result) {
+    std::cout << item.dump() << std::endl;
+    auto start = time_format_test(item["start"].get<float>());
+    auto end = time_format_test(item["end"].get<float>());
+    std::stringstream sub_wav;
+    sub_wav << "/home/binlee/code/Clearn/basic/testdata/split/" << start << "-" << end << ".wav";
+    std::cout << sub_wav.str() << std::endl;
+    // 根据起始和结束时间来分割音频
+    // ffmpeg -i input.mp3 -ss 00:01:30 -to 00:02:00 output.mp3
+    std::stringstream cmd_;
+    cmd_ << "ffmpeg -i " << input_file << " -ss " << start << " -to " << end << " -y " << sub_wav.str();
+    pipe_test(cmd_.str());
+    item.erase("start");
+    item.erase("end");
+    item["url"] = sub_wav.str();
+  }
+
+  // 结果写入文件中
+  std::ofstream out("/home/binlee/code/Clearn/basic/testdata/split_result.json");
+  out << split_result << std::endl;
+  out.close();
+}
+
 int cpp_samples() {
   std::cout << "\n>>>>>>>Welcome to C++ World!<<<<<<<<\n" << std::endl;
   // cpp_string();
@@ -574,8 +640,17 @@ int cpp_samples() {
   // std::cout << pipe_test("ffmpeg -version") << std::endl;
   // file_observer_test();
   // read_file_test();
-  json_test();
+  // json_test();
   // pipe_test("ls -vervose");
-  // ffmpeg_reverse_test("/home/binlee/Downloads/audio/dance-4k.mp4", "/tmp/dance-4k-reversed.mp4");
+  // ffmpeg_reverse_video_test("/home/binlee/Downloads/audio/dance-4k.mp4",
+  //                           "/tmp/dance-4k-reversed.mp4");
+  // auto float_time_list = std::vector<float>({3.6f, 36.f, 366.f, 3666.f, 3666.6f});
+  // for (const auto &item: float_time_list) {
+  //   std::cout << time_format_test(item) << std::endl;
+  // }
+  // /home/binlee/code/open-source/quvideo/algo-audio-whisper/testdata/results-zh.json
+  // /home/binlee/code/open-source/quvideo/algo-audio-whisper/testdata/ok.wav
+  ffmpeg_split_audio_test("/home/binlee/code/open-source/quvideo/algo-audio-whisper/testdata/ok.wav",
+                          "/home/binlee/code/open-source/quvideo/algo-audio-whisper/testdata/results-zh.json");
   return 0;
 }
