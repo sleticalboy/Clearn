@@ -548,18 +548,17 @@ void json_test() {
   o.close();
 }
 
-void ffmpeg_reverse_video_test(const std::string &input_file, const std::string &output_file) {
+void ffmpeg_video_reverse_test(const std::string &input_file, const std::string &output_file) {
   auto tmp_dir = std::string ("/tmp/") + std::to_string(random()) + "x" + std::to_string(random());
   std::cout << "tmp dir: " << tmp_dir << std::endl;
   pipe_test("mkdir -p " + tmp_dir);
   // 1、 获取视频时长并计算文件分片数
-  auto _command = std::string("ffprobe -show_format -show_streams -of json ") + input_file;
+  auto _command = std::string("ffprobe -v error -show_format -show_streams -of json ") + input_file;
   auto probe = nlohmann::json::parse(pipe_test(_command));
   assert(probe.is_object());
   auto dj = probe["format"]["duration"];
   auto duration = dj.is_number_float() ? dj.get<float>() * 1000 : std::stof(dj.get<std::string>()) * 1000;
-  std::cout << "duration is: " << duration << "ms" << std::endl;
-  std::cout << "segments: " << ceilf(duration / 5000);
+  std::cout << "duration is: " << duration << "ms" << ", segments: " << ceilf(duration / 5000) << std::endl;
   auto part_files = std::vector<std::string>((int) ceilf(duration / 5000));
   auto part_rfiles = std::vector<std::string>(part_files.capacity());
   for (int i = 0; i < part_files.capacity(); ++i) {
@@ -568,12 +567,12 @@ void ffmpeg_reverse_video_test(const std::string &input_file, const std::string 
   }
   // 2、切割视频
   // ffmpeg -i input.mp4 -c copy -map 0 -segment_time 300 -f segment output%d.mp4
-  pipe_test("ffmpeg -i " + input_file + " -c copy -map 0 -segment_time 5 -f segment -y " +
-            tmp_dir + "/part-%d.mp4 >/dev/null");
+  pipe_test("ffmpeg -v error -i " + input_file + " -c copy -map 0 -segment_time 5 -f segment -y " +
+            tmp_dir + "/part-%d.mp4");
   // 3、分段倒放
   for (int i = 0; i < part_files.size(); ++i) {
     // ffmpeg -i output1.mp4 -vf reverse reversed_output1.mp4
-    pipe_test("ffmpeg -i " + part_files[i] + " -vf reverse -y " + part_rfiles[i] + " >/dev/null");
+    pipe_test("ffmpeg -v error -i " + part_files[i] + " -vf reverse -y " + part_rfiles[i]);
   }
   // 4.1、倒放后的视频逆序后合并
   std::reverse(part_rfiles.begin(), part_rfiles.end());
@@ -586,16 +585,17 @@ void ffmpeg_reverse_video_test(const std::string &input_file, const std::string 
   fs.close();
   // 4.2、合并视频
   // ffmpeg -i "concat:reversed_output1.mp4|reversed_output2.mp4|reversed_output3.mp4" -c copy reversed_full.mp4
-  pipe_test("ffmpeg -f concat -safe 0 -i " + merge_file + " -c copy -y " + output_file + " >/dev/null");
+  pipe_test("ffmpeg -v error -f concat -safe 0 -i " + merge_file + " -c copy -y " + output_file);
 
   // 播放倒放后的视频
   std::cout << pipe_test("ls -alh " + tmp_dir) << std::endl;
-  pipe_test("ffplay " + output_file);
+  // pipe_test("ffplay -v error " + input_file);
+  pipe_test("ffplay -v error " + output_file);
 
   std::__fs::filesystem::remove_all(tmp_dir);
 }
 
-void ffmpeg_split_audio_test(const std::string &input_file, const std::string &config_file) {
+void ffmpeg_audio_split_test(const std::string &input_file, const std::string &config_file) {
   // // ffmpeg -i input.mp3 -ss 00:01:30 -to 00:02:00 output.mp3
   std::ifstream ifs(config_file);
   auto json = nlohmann::json::parse(ifs);
@@ -612,7 +612,7 @@ void ffmpeg_split_audio_test(const std::string &input_file, const std::string &c
     // 根据起始和结束时间来分割音频
     // ffmpeg -i input.mp3 -ss 00:01:30 -to 00:02:00 output.mp3
     std::stringstream cmd_;
-    cmd_ << "ffmpeg -i " << input_file << " -ss " << start << " -to " << end << " -y " << sub_wav.str();
+    cmd_ << "ffmpeg -v error -i " << input_file << " -ss " << start << " -to " << end << " -y " << sub_wav.str();
     pipe_test(cmd_.str());
     item.erase("start");
     item.erase("end");
@@ -623,6 +623,11 @@ void ffmpeg_split_audio_test(const std::string &input_file, const std::string &c
   std::ofstream out("/home/binlee/code/Clearn/basic/testdata/split_result.json");
   out << split_result << std::endl;
   out.close();
+}
+
+void ffmpeg_audio_convert_test(const std::string &input_file, const std::string &output_file) {
+  pipe_test("ffmpeg -v error -i " + input_file + " -acodec pcm_s16le -y " + output_file);
+  pipe_test("ffprobe " + output_file + "; ffplay -v error " + output_file);
 }
 
 int cpp_samples() {
@@ -642,7 +647,7 @@ int cpp_samples() {
   // read_file_test();
   // json_test();
   // pipe_test("ls -vervose");
-  // ffmpeg_reverse_video_test("/home/binlee/Downloads/audio/dance-4k.mp4",
+  // ffmpeg_video_reverse_test("/home/binlee/Downloads/audio/dance-4k.mp4",
   //                           "/tmp/dance-4k-reversed.mp4");
   // auto float_time_list = std::vector<float>({3.6f, 36.f, 366.f, 3666.f, 3666.6f});
   // for (const auto &item: float_time_list) {
@@ -650,7 +655,8 @@ int cpp_samples() {
   // }
   // /home/binlee/code/open-source/quvideo/algo-audio-whisper/testdata/results-zh.json
   // /home/binlee/code/open-source/quvideo/algo-audio-whisper/testdata/ok.wav
-  ffmpeg_split_audio_test("/home/binlee/code/open-source/quvideo/algo-audio-whisper/testdata/ok.wav",
-                          "/home/binlee/code/open-source/quvideo/algo-audio-whisper/testdata/results-zh.json");
+  // ffmpeg_audio_split_test("/home/binlee/code/open-source/quvideo/algo-audio-whisper/testdata/ok.wav",
+  //                         "/home/binlee/code/open-source/quvideo/algo-audio-whisper/testdata/results-zh.json");
+  ffmpeg_audio_convert_test("/home/binlee/Downloads/18s-audio.m4a", "/home/binlee/Downloads/18s-audio.wav");
   return 0;
 }
