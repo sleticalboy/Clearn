@@ -630,6 +630,24 @@ void ffmpeg_audio_convert_test(const std::string &input_file, const std::string 
   pipe_test("ffprobe " + output_file + "; ffplay -v error " + output_file);
 }
 
+void class_instance_ref_test() {
+  auto setField = [](const std::string &value, std::string &dst, const std::string &msg) {
+    dst = value;
+    std::cout << "set '" + value << "' to '" << msg << "'" << std::endl;
+  };
+
+  struct Meta {
+    std::string version;
+    std::string name;
+  };
+
+  Meta meta{};
+  setField("v1", meta.version, "version");
+  setField("prj parse", meta.name, "name");
+
+  std::cout << "meta detail: name: " << meta.name << ", version: " << meta.version << std::endl;
+}
+
 int cpp_samples() {
   std::cout << "\n>>>>>>>Welcome to C++ World!<<<<<<<<\n" << std::endl;
   // cpp_string();
@@ -657,6 +675,7 @@ int cpp_samples() {
   // /home/binlee/code/open-source/quvideo/algo-audio-whisper/testdata/ok.wav
   // ffmpeg_audio_split_test("/home/binlee/code/open-source/quvideo/algo-audio-whisper/testdata/ok.wav",
   //                         "/home/binlee/code/open-source/quvideo/algo-audio-whisper/testdata/results-zh.json");
-  ffmpeg_audio_convert_test("/home/binlee/Downloads/18s-audio.m4a", "/home/binlee/Downloads/18s-audio.wav");
+  // ffmpeg_audio_convert_test("/home/binlee/Downloads/18s-audio.m4a", "/home/binlee/Downloads/18s-audio.wav");
+  class_instance_ref_test();
   return 0;
 }
