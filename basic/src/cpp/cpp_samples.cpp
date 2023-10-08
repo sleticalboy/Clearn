@@ -16,6 +16,9 @@
 #include <fstream>
 
 #include "cpp_samples.h"
+#include "cpp_string.h"
+#include "Person.h"
+
 
 // json
 #include "nlohmann/json.hpp"
@@ -63,7 +66,7 @@ void traversalDir(const std::string &path, const std::function<void(const std::s
   }
 }
 
-void map_files_0(const std::string &path, std::map<long long, std::string> &file_map) {
+void mapFiles0(const std::string &path, std::map<long long, std::string> &file_map) {
   auto map_ttid = [&](const std::string &name) {
     size_t left = name.find("0x");
     size_t right = name.find(".xyt");
@@ -74,7 +77,7 @@ void map_files_0(const std::string &path, std::map<long long, std::string> &file
   };
   if (fs::is_directory(path)) {
     for (auto &ent: fs::directory_iterator(path)) {
-      map_files_0(ent.path().string(), file_map);
+      mapFiles0(ent.path().string(), file_map);
     }
   } else if (fs::is_regular_file(path)) {
     printf("%s(): %s\n", __func__, path.c_str());
@@ -82,7 +85,7 @@ void map_files_0(const std::string &path, std::map<long long, std::string> &file
   }
 }
 
-void map_files(const std::string &path, std::map<long long, std::string> &file_map) {
+void mapFiles(const std::string &path, std::map<long long, std::string> &file_map) {
   traversalDir(path, [&](const std::string &fp) {
     auto left = fp.find("0x");
     auto right = fp.rfind(".xyt");
@@ -129,7 +132,7 @@ std::string getExt(const std::string &path) {
   return "";
 }
 
-void search_files(const std::string &path, std::vector<std::string> &output, const std::string &ext,
+void searchFiles(const std::string &path, std::vector<std::string> &output, const std::string &ext,
                   bool single = true) {
   traversalDir(path, [&](const std::string &fp) {
     if (endsWith(fp, ext)) output.push_back(fp);
@@ -138,27 +141,27 @@ void search_files(const std::string &path, std::vector<std::string> &output, con
   });
 }
 
-void search_test() {
+void searchTest() {
   std::string path("/home/binlee/Downloads/xyt");
   auto targets = std::vector<std::string>();
-  search_files(path, targets, ".xyt", false);
+  searchFiles(path, targets, ".xyt", false);
   for (const auto &item: targets) {
     printf("xyt file: %s\n", item.c_str());
   }
 
   auto file_map = std::map<long long, std::string>();
-  map_files(path, file_map);
+  mapFiles(path, file_map);
   for (const auto &item: file_map) {
     std::printf("c style --->%lld: %s\n", item.first, item.second.c_str());
   }
   file_map.clear();
-  map_files_0(path, file_map);
+  mapFiles0(path, file_map);
   for (const auto &item: file_map) {
     std::printf("cpp style --->%lld: %s\n", item.first, item.second.c_str());
   }
 }
 
-void match_test() {
+void matchTest() {
   std::string tester("0x06000000000007CA.xyt");
   printf("%s starts with '0x': %d\n", tester.c_str(), startsWith(tester, "0x"));
   printf("%s ends with '.xyt': %d\n", tester.c_str(), endsWith(tester, ".xyt"));
@@ -173,20 +176,20 @@ void match_test() {
   printf("%s ends with '.xyt': %d\n", tester.c_str(), endsWith(tester, ".xyt"));
 }
 
-void parse_test() {
+void parseTest() {
   printf("'648518346341352029' -> %llx\n", parseTemplateId("648518346341352029"));
   printf("'0400600000001FF1' -> %llx\n", parseTemplateId("0400600000001FF1"));
   printf("'0x0400600000001FF1' -> %llx\n", parseTemplateId("0x0400600000001FF1"));
 }
 
-void get_file_name_test() {
+void getFileNameTest() {
   // 获取文件名测试
   printf("/home/me/a.txt -> name: %s\n", getName("a.txt").c_str());
   printf("a.jpg -> name: %s\n", getName("a.jpg").c_str());
   printf("/home/me/a.png -> name: %s\n", getName("a.png").c_str());
 }
 
-void get_file_ext_test() {
+void getFileExtTest() {
   // 获取文件后缀测试
   printf("a.txt -> ext: %s\n", getExt("a.txt").c_str());
   printf("a.jpg -> ext: %s\n", getExt("a.jpg").c_str());
@@ -203,7 +206,7 @@ void get_file_ext_test() {
          getExt("http://www.example.com/home/a").c_str());
 }
 
-void try_catch_test() {
+void tryCatchTest() {
   try {
     // throws std::length_error
     std::string("abc").substr(10);
@@ -213,7 +216,7 @@ void try_catch_test() {
   }
 }
 
-void trim_path_test() {
+void trimPathTest() {
   auto p = std::string("/tmp/3de1c8ca-c64c-49c5-80cb-9e6d6d0dc75f/0x01000000000022BA/0x47800000000022BA/music.mp3");
   // auto p = std::string("/music.mp3");
   if (getName(p) == "music.mp3") {
@@ -224,7 +227,7 @@ void trim_path_test() {
   }
 }
 
-std::string pipe_test(const std::string &cmd) {
+std::string pipeTest(const std::string &cmd) {
   auto fd = popen(cmd.c_str(), "r");
   if (fd == nullptr) {
     std::cerr << "Create pipe error." << std::endl;
@@ -383,7 +386,7 @@ void epoll_event_handler(int num, struct epoll_event event_buf[], int inotify_fd
   }
 }
 
-void file_observer_test() {
+void fileObserverTest() {
   auto cwd = getcwd(nullptr, 0);
   std::string prj_root = fs::path(cwd).parent_path();
   std::cout << "cwd: " << cwd << ", prj root: " << prj_root << std::endl;
@@ -461,7 +464,7 @@ void file_observer_test() {
   std::cout << __func__ << "() exit.\n";
 }
 
-void read_file_test() {
+void readFileTest() {
   auto cwd = getcwd(nullptr, 0);
   std::string prj_root = fs::path(cwd).parent_path();
   auto test_file = prj_root + "/testdata/results.json";
@@ -474,7 +477,7 @@ void read_file_test() {
   std::cout << "file size: " << s.st_size << " is: " << buf << std::endl;
 }
 
-std::string time_format_test(float time) {
+std::string timeFormatTest(float time) {
   // 时间格式为： 00:01:30.500
   int h = 0, m = 0;
   if (time > 3600) {
@@ -505,7 +508,7 @@ std::string time_format_test(float time) {
   return r.str();
 }
 
-void json_test() {
+void jsonTest() {
   // 从字符串解析
   auto j = nlohmann::json::parse(R"({"hello":"World","world":"Hello","duration": 2.79})");
   std::string h = j["hello"].get<std::string>();
@@ -548,13 +551,13 @@ void json_test() {
   o.close();
 }
 
-void ffmpeg_video_reverse_test(const std::string &input_file, const std::string &output_file) {
+void ffmpegVideoReverseTest(const std::string &input_file, const std::string &output_file) {
   auto tmp_dir = std::string ("/tmp/") + std::to_string(random()) + "x" + std::to_string(random());
   std::cout << "tmp dir: " << tmp_dir << std::endl;
-  pipe_test("mkdir -p " + tmp_dir);
+  pipeTest("mkdir -p " + tmp_dir);
   // 1、 获取视频时长并计算文件分片数
   auto _command = std::string("ffprobe -v error -show_format -show_streams -of json ") + input_file;
-  auto probe = nlohmann::json::parse(pipe_test(_command));
+  auto probe = nlohmann::json::parse(pipeTest(_command));
   assert(probe.is_object());
   auto dj = probe["format"]["duration"];
   auto duration = dj.is_number_float() ? dj.get<float>() * 1000 : std::stof(dj.get<std::string>()) * 1000;
@@ -567,12 +570,12 @@ void ffmpeg_video_reverse_test(const std::string &input_file, const std::string 
   }
   // 2、切割视频
   // ffmpeg -i input.mp4 -c copy -map 0 -segment_time 300 -f segment output%d.mp4
-  pipe_test("ffmpeg -v error -i " + input_file + " -c copy -map 0 -segment_time 5 -f segment -y " +
+  pipeTest("ffmpeg -v error -i " + input_file + " -c copy -map 0 -segment_time 5 -f segment -y " +
             tmp_dir + "/part-%d.mp4");
   // 3、分段倒放
   for (int i = 0; i < part_files.size(); ++i) {
     // ffmpeg -i output1.mp4 -vf reverse reversed_output1.mp4
-    pipe_test("ffmpeg -v error -i " + part_files[i] + " -vf reverse -y " + part_rfiles[i]);
+    pipeTest("ffmpeg -v error -i " + part_files[i] + " -vf reverse -y " + part_rfiles[i]);
   }
   // 4.1、倒放后的视频逆序后合并
   std::reverse(part_rfiles.begin(), part_rfiles.end());
@@ -585,17 +588,17 @@ void ffmpeg_video_reverse_test(const std::string &input_file, const std::string 
   fs.close();
   // 4.2、合并视频
   // ffmpeg -i "concat:reversed_output1.mp4|reversed_output2.mp4|reversed_output3.mp4" -c copy reversed_full.mp4
-  pipe_test("ffmpeg -v error -f concat -safe 0 -i " + merge_file + " -c copy -y " + output_file);
+  pipeTest("ffmpeg -v error -f concat -safe 0 -i " + merge_file + " -c copy -y " + output_file);
 
   // 播放倒放后的视频
-  std::cout << pipe_test("ls -alh " + tmp_dir) << std::endl;
-  // pipe_test("ffplay -v error " + input_file);
-  pipe_test("ffplay -v error " + output_file);
+  std::cout << pipeTest("ls -alh " + tmp_dir) << std::endl;
+  // pipeTest("ffplay -v error " + input_file);
+  pipeTest("ffplay -v error " + output_file);
 
   std::__fs::filesystem::remove_all(tmp_dir);
 }
 
-void ffmpeg_audio_split_test(const std::string &input_file, const std::string &config_file) {
+void ffmpegAudioSplitTest(const std::string &input_file, const std::string &config_file) {
   // // ffmpeg -i input.mp3 -ss 00:01:30 -to 00:02:00 output.mp3
   std::ifstream ifs(config_file);
   auto json = nlohmann::json::parse(ifs);
@@ -604,8 +607,8 @@ void ffmpeg_audio_split_test(const std::string &input_file, const std::string &c
   nlohmann::json split_result(json["data"]);
   for (auto &item: split_result) {
     std::cout << item.dump() << std::endl;
-    auto start = time_format_test(item["start"].get<float>());
-    auto end = time_format_test(item["end"].get<float>());
+    auto start = timeFormatTest(item["start"].get<float>());
+    auto end = timeFormatTest(item["end"].get<float>());
     std::stringstream sub_wav;
     sub_wav << "/home/binlee/code/Clearn/basic/testdata/split/" << start << "-" << end << ".wav";
     std::cout << sub_wav.str() << std::endl;
@@ -613,7 +616,7 @@ void ffmpeg_audio_split_test(const std::string &input_file, const std::string &c
     // ffmpeg -i input.mp3 -ss 00:01:30 -to 00:02:00 output.mp3
     std::stringstream cmd_;
     cmd_ << "ffmpeg -v error -i " << input_file << " -ss " << start << " -to " << end << " -y " << sub_wav.str();
-    pipe_test(cmd_.str());
+    pipeTest(cmd_.str());
     item.erase("start");
     item.erase("end");
     item["url"] = sub_wav.str();
@@ -625,12 +628,12 @@ void ffmpeg_audio_split_test(const std::string &input_file, const std::string &c
   out.close();
 }
 
-void ffmpeg_audio_convert_test(const std::string &input_file, const std::string &output_file) {
-  pipe_test("ffmpeg -v error -i " + input_file + " -acodec pcm_s16le -y " + output_file);
-  pipe_test("ffprobe " + output_file + "; ffplay -v error " + output_file);
+void ffmpegAudioConvertTest(const std::string &input_file, const std::string &output_file) {
+  pipeTest("ffmpeg -v error -i " + input_file + " -acodec pcm_s16le -y " + output_file);
+  pipeTest("ffprobe " + output_file + "; ffplay -v error " + output_file);
 }
 
-void class_instance_ref_test() {
+void classInstanceRefTest() {
   auto setField = [](const std::string &value, std::string &dst, const std::string &msg) {
     dst = value;
     std::cout << "set '" + value << "' to '" << msg << "'" << std::endl;
@@ -652,30 +655,30 @@ int cpp_samples() {
   std::cout << "\n>>>>>>>Welcome to C++ World!<<<<<<<<\n" << std::endl;
   // cpp_string();
   // person_main();
-  // search_test();
-  // match_test();
-  // parse_test();
-  // get_file_name_test();
-  // get_file_ext_test();
-  // try_catch_test();
-  // trim_path_test();
-  // std::cout << pipe_test("ls -alh .") << std::endl;
-  // std::cout << pipe_test("ffmpeg -version") << std::endl;
-  // file_observer_test();
-  // read_file_test();
-  // json_test();
-  // pipe_test("ls -vervose");
-  // ffmpeg_video_reverse_test("/home/binlee/Downloads/audio/dance-4k.mp4",
+  // searchTest();
+  // matchTest();
+  // parseTest();
+  // getFileNameTest();
+  // getFileExtTest();
+  // tryCatchTest();
+  // trimPathTest();
+  // std::cout << pipeTest("ls -alh .") << std::endl;
+  // std::cout << pipeTest("ffmpeg -version") << std::endl;
+  // fileObserverTest();
+  // readFileTest();
+  // jsonTest();
+  // pipeTest("ls -vervose");
+  // ffmpegVideoReverseTest("/home/binlee/Downloads/audio/dance-4k.mp4",
   //                           "/tmp/dance-4k-reversed.mp4");
   // auto float_time_list = std::vector<float>({3.6f, 36.f, 366.f, 3666.f, 3666.6f});
   // for (const auto &item: float_time_list) {
-  //   std::cout << time_format_test(item) << std::endl;
+  //   std::cout << timeFormatTest(item) << std::endl;
   // }
-  // /home/binlee/code/open-source/quvideo/algo-audio-whisper/testdata/results-zh.json
-  // /home/binlee/code/open-source/quvideo/algo-audio-whisper/testdata/ok.wav
-  // ffmpeg_audio_split_test("/home/binlee/code/open-source/quvideo/algo-audio-whisper/testdata/ok.wav",
+  // // /home/binlee/code/open-source/quvideo/algo-audio-whisper/testdata/results-zh.json
+  // // /home/binlee/code/open-source/quvideo/algo-audio-whisper/testdata/ok.wav
+  // ffmpegAudioSplitTest("/home/binlee/code/open-source/quvideo/algo-audio-whisper/testdata/ok.wav",
   //                         "/home/binlee/code/open-source/quvideo/algo-audio-whisper/testdata/results-zh.json");
-  // ffmpeg_audio_convert_test("/home/binlee/Downloads/18s-audio.m4a", "/home/binlee/Downloads/18s-audio.wav");
-  class_instance_ref_test();
+  // ffmpegAudioConvertTest("/home/binlee/Downloads/18s-audio.m4a", "/home/binlee/Downloads/18s-audio.wav");
+  classInstanceRefTest();
   return 0;
 }
