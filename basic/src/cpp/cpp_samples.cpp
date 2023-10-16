@@ -25,6 +25,7 @@
 
 namespace fs = std::__fs::filesystem;
 
+static std::string PIPE_ERR("pipe err");
 
 bool startsWith(const std::string &s, const std::string &prefix) {
   return s.find(prefix) == 0;
@@ -231,6 +232,7 @@ std::string pipeTest(const std::string &cmd) {
   auto fd = popen(cmd.c_str(), "r");
   if (fd == nullptr) {
     std::cerr << "Create pipe error." << std::endl;
+    return PIPE_ERR;
   }
   std::stringstream ss;
   char buf[1024];
@@ -242,7 +244,7 @@ std::string pipeTest(const std::string &cmd) {
   // pclose() 返回该命令执行返回值，0 表示成功，其他表示失败
   int res = pclose(fd);
   std::cout << cmd << " exit with: " << res << std::endl;
-  if (res != 0) return {};
+  if (res != 0) return PIPE_ERR;
   return ss.str();
 }
 
@@ -595,7 +597,7 @@ void ffmpegVideoReverseTest(const std::string &input_file, const std::string &ou
   // pipeTest("ffplay -v error " + input_file);
   pipeTest("ffplay -v error " + output_file);
 
-  std::__fs::filesystem::remove_all(tmp_dir);
+  // std::__fs::filesystem::remove_all(tmp_dir);
 }
 
 void ffmpegAudioSplitTest(const std::string &input_file, const std::string &config_file) {
@@ -633,6 +635,25 @@ void ffmpegAudioConvertTest(const std::string &input_file, const std::string &ou
   pipeTest("ffprobe " + output_file + "; ffplay -v error " + output_file);
 }
 
+void ffmpegVideoMergeTest(const std::vector<std::string> &input_files, const std::string &output_file) {
+  auto merge_txt = std::string("/tmp/1804289383x846930886/merge.txt");
+  auto fs = std::ofstream(merge_txt);
+  for (const auto &item: input_files) {
+    std::cout << pipeTest("ls -alh " + item) << std::endl;
+    fs << "file '" << item << "'" << std::endl;
+  }
+  fs.close();
+  std::cout << pipeTest("cat " + merge_txt) << std::endl;
+  auto r = pipeTest("ffmpeg -v error -f concat -safe 0 -i " + merge_txt + " -c copy -y " + output_file);
+  // 删除临时文件
+  std::remove(merge_txt.c_str());
+
+  if (r == PIPE_ERR) return;
+
+  std::cout << pipeTest("ls -alh " + output_file) << std::endl;
+  // pipeTest("ffplay -v error " + output_file);
+}
+
 void classInstanceRefTest() {
   auto setField = [](const std::string &value, std::string &dst, const std::string &msg) {
     dst = value;
@@ -666,10 +687,10 @@ int cpp_samples() {
   // std::cout << pipeTest("ffmpeg -version") << std::endl;
   // fileObserverTest();
   // readFileTest();
+  // classInstanceRefTest();
   // jsonTest();
   // pipeTest("ls -vervose");
-  // ffmpegVideoReverseTest("/home/binlee/Downloads/audio/dance-4k.mp4",
-  //                           "/tmp/dance-4k-reversed.mp4");
+  // ffmpegVideoReverseTest("/home/binlee/Downloads/audio/dance-4k.mp4", "/tmp/dance-4k-reversed.mp4");
   // auto float_time_list = std::vector<float>({3.6f, 36.f, 366.f, 3666.f, 3666.6f});
   // for (const auto &item: float_time_list) {
   //   std::cout << timeFormatTest(item) << std::endl;
@@ -679,6 +700,7 @@ int cpp_samples() {
   // ffmpegAudioSplitTest("/home/binlee/code/open-source/quvideo/algo-audio-whisper/testdata/ok.wav",
   //                         "/home/binlee/code/open-source/quvideo/algo-audio-whisper/testdata/results-zh.json");
   // ffmpegAudioConvertTest("/home/binlee/Downloads/18s-audio.m4a", "/home/binlee/Downloads/18s-audio.wav");
-  classInstanceRefTest();
+  ffmpegVideoMergeTest({"/tmp/1804289383x846930886/part-0.mp4", "/tmp/1804289383x846930886/part-r-0.mp4"},
+                       "/tmp/1804289383x846930886/hello.mp4");
   return 0;
 }
