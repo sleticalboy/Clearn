@@ -636,22 +636,23 @@ void ffmpegAudioConvertTest(const std::string &input_file, const std::string &ou
 }
 
 void ffmpegVideoMergeTest(const std::vector<std::string> &input_files, const std::string &output_file) {
-  auto merge_txt = std::string("/tmp/1804289383x846930886/merge.txt");
-  auto fs = std::ofstream(merge_txt);
+  // ffmpeg -i input1.mp4 -i input2.mp4 -filter_complex "[0:v][0:a][1:v][1:a]concat=n=2:v=1:a=1" -strict -2 -y output.mp4
+  auto cmd = std::string("ffmpeg -v error");
   for (const auto &item: input_files) {
-    std::cout << pipeTest("ls -alh " + item) << std::endl;
-    fs << "file '" << item << "'" << std::endl;
+    cmd += (" -i " + item);
   }
-  fs.close();
-  std::cout << pipeTest("cat " + merge_txt) << std::endl;
-  auto r = pipeTest("ffmpeg -v error -f concat -safe 0 -i " + merge_txt + " -c copy -y " + output_file);
-  // 删除临时文件
-  std::remove(merge_txt.c_str());
-
+  cmd += " -filter_complex \"";
+  for (int i = 0; i < input_files.size(); ++i) {
+    cmd += ("[" + std::to_string(i) + ":v][" + std::to_string(i) + ":a]");
+  }
+  cmd += ("concat=n=" + std::to_string(input_files.size()) + ":v=1:a=1");
+  cmd += ("\" -strict -2 -y " + output_file);
+  std::cout << "cmd is: " << cmd << std::endl;
+  auto r = pipeTest(cmd);
   if (r == PIPE_ERR) return;
 
   std::cout << pipeTest("ls -alh " + output_file) << std::endl;
-  // pipeTest("ffplay -v error " + output_file);
+  pipeTest("vlc " + output_file);
 }
 
 void classInstanceRefTest() {
