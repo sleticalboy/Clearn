@@ -14,6 +14,7 @@
 #include <sys/inotify.h>
 #include <sstream>
 #include <fstream>
+#include <thread>
 
 #include "cpp_samples.h"
 #include "cpp_string.h"
@@ -693,6 +694,25 @@ void eraseMapTest() {
   std::cout << m.erase("a") << std::endl;
 }
 
+void threadTest() {
+  auto id = std::this_thread::get_id();
+  std::cout << "threadTest() main thread id: " << id << std::endl;
+
+  auto task = []() {
+    auto id = std::this_thread::get_id();
+    std::cout << "task() sub thread id: " << id << std::endl;
+    for (int i = 0; i < 5; ++i) {
+      std::cout << "loop " << i << std::endl;
+      usleep(i * 200 * 1000);
+    }
+  };
+
+  auto t = std::thread(task);
+  t.join();
+
+  std::cout << "threadTest() exit " << std::endl;
+}
+
 int cpp_samples() {
   std::cout << "\n>>>>>>>Welcome to C++ World!<<<<<<<<\n" << std::endl;
   // cpp_string();
@@ -724,7 +744,7 @@ int cpp_samples() {
   // ffmpegAudioConvertTest("/home/binlee/Downloads/18s-audio.m4a", "/home/binlee/Downloads/18s-audio.wav");
   // ffmpegVideoMergeTest({"/tmp/1804289383x846930886/part-0.mp4", "/tmp/1804289383x846930886/part-r-0.mp4"},
   //                      "/tmp/1804289383x846930886/hello.mp4");
-  usleep(300 * 1000);
-  eraseMapTest();
+  // eraseMapTest();
+  threadTest();
   return 0;
 }
