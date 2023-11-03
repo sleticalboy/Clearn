@@ -19,6 +19,7 @@
 #include "cpp_samples.h"
 #include "cpp_string.h"
 #include "Person.h"
+#include "cmd_runner.h"
 
 
 // json
@@ -229,11 +230,11 @@ void trimPathTest() {
   }
 }
 
-std::string pipeTest(const std::string &cmd) {
+std::pair<int, std::string> pipeTest(const std::string &cmd) {
   auto fd = popen(cmd.c_str(), "r");
   if (fd == nullptr) {
     std::cerr << "Create pipe error." << std::endl;
-    return PIPE_ERR;
+    return {0, PIPE_ERR};
   }
   std::stringstream ss;
   char buf[1024];
@@ -245,8 +246,7 @@ std::string pipeTest(const std::string &cmd) {
   // pclose() 返回该命令执行返回值，0 表示成功，其他表示失败
   int res = pclose(fd);
   std::cout << cmd << " exit with: " << res << std::endl;
-  if (res != 0) return PIPE_ERR;
-  return ss.str();
+  return {res, ss.str()};
 }
 
 struct UserData {
@@ -564,7 +564,7 @@ void ffmpegVideoReverseTest(const std::string &input_file, const std::string &ou
             tmp_dir + "/part-%d.mp4");
   // 2、 获取视频时长并计算文件分片数
   auto _command = std::string("ffprobe -v error -show_format -show_streams -of json ") + input_file;
-  auto probe = nlohmann::json::parse(pipeTest(_command));
+  auto probe = nlohmann::json::parse(pipeTest(_command).second);
   assert(probe.is_object());
   auto dj = probe["format"]["duration"];
   auto duration = dj.is_number_float() ? dj.get<float>() * 1000 : std::stof(dj.get<std::string>()) * 1000;
@@ -575,7 +575,7 @@ void ffmpegVideoReverseTest(const std::string &input_file, const std::string &ou
   struct stat s{};
   if (stat(last_part.c_str(), &s) != 0) {
     std::cerr << "split file failed" << std::endl;
-    std::cout << pipeTest("ls -alh " + tmp_dir) << std::endl;
+    std::cout << pipeTest("ls -alh " + tmp_dir).second << std::endl;
     return;
   }
 
@@ -604,7 +604,7 @@ void ffmpegVideoReverseTest(const std::string &input_file, const std::string &ou
   pipeTest("ffmpeg -v error -f concat -safe 0 -i " + merge_file + " -c copy -y " + output_file);
 
   // 播放倒放后的视频
-  std::cout << pipeTest("ls -alh " + tmp_dir) << std::endl;
+  std::cout << pipeTest("ls -alh " + tmp_dir).second << std::endl;
   // pipeTest("ffplay -v error " + input_file);
   pipeTest("ffplay -v error " + output_file);
 
@@ -660,9 +660,9 @@ void ffmpegVideoMergeTest(const std::vector<std::string> &input_files, const std
   cmd += ("\" -strict -2 -y " + output_file);
   std::cout << "cmd is: " << cmd << std::endl;
   auto r = pipeTest(cmd);
-  if (r == PIPE_ERR) return;
+  if (r.second == PIPE_ERR) return;
 
-  std::cout << pipeTest("ls -alh " + output_file) << std::endl;
+  std::cout << pipeTest("ls -alh " + output_file).second << std::endl;
   pipeTest("vlc " + output_file);
 }
 
@@ -713,6 +713,14 @@ void threadTest() {
   std::cout << "threadTest() exit " << std::endl;
 }
 
+void cmdRunnerTest() {
+  auto runner = cmd_runner("tree");
+  runner.add_argument(".", "\"\"");
+  runner.add_argument("-L", "2");
+  auto r = runner.run();
+  std::cout << "res: " << r.first << ", out: " << r.second << std::endl;
+}
+
 int cpp_samples() {
   std::cout << "\n>>>>>>>Welcome to C++ World!<<<<<<<<\n" << std::endl;
   // cpp_string();
@@ -745,6 +753,13 @@ int cpp_samples() {
   // ffmpegVideoMergeTest({"/tmp/1804289383x846930886/part-0.mp4", "/tmp/1804289383x846930886/part-r-0.mp4"},
   //                      "/tmp/1804289383x846930886/hello.mp4");
   // eraseMapTest();
-  threadTest();
+  // threadTest();
+  // cmdRunnerTest();
+
+  std::any a;
+  a = 1;
+  std::cout << "type: " << a.type().name() << " \n";// << std::any_cast<int>(a) << std::endl;
+  a = "hello world";
+  std::cout << "type: " << a.type().name() << " \n";// << std::any_cast<std::string>(a) << std::endl;
   return 0;
 }

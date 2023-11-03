@@ -9,7 +9,7 @@ set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
 # original is --std=c99, and now we use --std=gnu99 for usleep()
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --std=gnu99 -pthread")
 # -pthread for undefined reference to `pthread_create`
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread -fPIC -stdlib=libc++ -fexceptions")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -pthread -fPIC -stdlib=libc++ -fexceptions")
 
 # 包含以下源码目录
 include_directories(src/)
