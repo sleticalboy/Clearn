@@ -57,7 +57,7 @@ public:
     }
   }
 
-  std::pair<int, std::string> run() const {
+  [[nodiscard]] std::pair<int, std::string> run() const {
     auto cmd = this->cmd_ + " ";
     for (int i = 0; i < this->args_.size(); ++i) {
       if (i != this->args_.size() - 1) {

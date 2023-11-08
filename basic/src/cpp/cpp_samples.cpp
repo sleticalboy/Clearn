@@ -136,7 +136,7 @@ std::string getExt(const std::string &path) {
 }
 
 void searchFiles(const std::string &path, std::vector<std::string> &output, const std::string &ext,
-                  bool single = true) {
+                 bool single = true) {
   traversalDir(path, [&](const std::string &fp) {
     if (endsWith(fp, ext)) output.push_back(fp);
   }, [&]() {
@@ -543,7 +543,7 @@ void jsonTest() {
   }
   j["obj"] = R"({"a":"a-","b":"b-"})"_json;
   j["obj_"] = {
-      {"pi", 3.1415926},
+      {"pi",    3.1415926},
       {"happy", true}
   };
   std::cout << j.dump() << std::endl;
@@ -555,13 +555,13 @@ void jsonTest() {
 }
 
 void ffmpegVideoReverseTest(const std::string &input_file, const std::string &output_file) {
-  auto tmp_dir = std::string ("/tmp/") + std::to_string(random()) + "x" + std::to_string(random());
+  auto tmp_dir = std::string("/tmp/") + std::to_string(random()) + "x" + std::to_string(random());
   std::cout << "tmp dir: " << tmp_dir << std::endl;
   pipeTest("mkdir -p " + tmp_dir);
   // 1、切割视频
   // ffmpeg -i input.mp4 -c copy -map 0 -segment_time 300 -f segment output%d.mp4
   pipeTest("ffmpeg -v error -i " + input_file + " -c copy -map 0 -segment_time 5 -f segment -y " +
-            tmp_dir + "/part-%d.mp4");
+           tmp_dir + "/part-%d.mp4");
   // 2、 获取视频时长并计算文件分片数
   auto _command = std::string("ffprobe -v error -show_format -show_streams -of json ") + input_file;
   auto probe = nlohmann::json::parse(pipeTest(_command).second);
@@ -571,7 +571,7 @@ void ffmpegVideoReverseTest(const std::string &input_file, const std::string &ou
   std::cout << "duration is: " << duration << "ms" << ", segments: " << ceilf(duration / 5000) << std::endl;
 
   // 检测切割是否成功
-  auto last_part = tmp_dir + "/part-" + std::to_string(((int) ceilf(duration/5000)) - 1) + ".mp4";
+  auto last_part = tmp_dir + "/part-" + std::to_string(((int) ceilf(duration / 5000)) - 1) + ".mp4";
   struct stat s{};
   if (stat(last_part.c_str(), &s) != 0) {
     std::cerr << "split file failed" << std::endl;
@@ -721,6 +721,39 @@ void cmdRunnerTest() {
   std::cout << "res: " << r.first << ", out: " << r.second << std::endl;
 }
 
+void anyTest() {
+  std::any a;
+  a = 1;
+  std::cout << "type: " << a.type().name() << " \n";// << std::any_cast<int>(a) << std::endl;
+  a = "hello world";
+  std::cout << "type: " << a.type().name() << " \n";// << std::any_cast<std::string>(a) << std::endl;
+}
+
+void childrenProcessTest() {
+  auto new_pid = fork();
+  if (new_pid < 0) {
+    std::cerr << "fork failed" << std::endl;
+  } else if (new_pid == 0) { // child process
+    std::cout << "child process: " << getpid() << ", ppid: " << getppid() << ", new pid: " << new_pid << std::endl;
+    for (int i = 0; i < 10; ++i) {
+      run_pipe("ls -alh >> /dev/null", false);
+      usleep(100 * 1000);
+    }
+  } else { // parent process
+    std::cout << "parent process: " << getpid() << ", ppid: " << getppid() << ", new pid: " << new_pid << std::endl;
+    auto scanTask = std::thread([&]() {
+      std::stringstream path;
+      path << "/proc/" << getpid() << "/task";
+      std::cout << "start scan child proc: " << path.str() << std::endl;
+      for (int i = 0; i < 3; ++i) {
+        run_pipe("tree " + path.str() + " -L 1");
+        usleep(300 * 1000);
+      }
+    });
+    scanTask.join();
+  }
+}
+
 int cpp_samples() {
   std::cout << "\n>>>>>>>Welcome to C++ World!<<<<<<<<\n" << std::endl;
   // cpp_string();
@@ -755,11 +788,7 @@ int cpp_samples() {
   // eraseMapTest();
   // threadTest();
   // cmdRunnerTest();
-
-  std::any a;
-  a = 1;
-  std::cout << "type: " << a.type().name() << " \n";// << std::any_cast<int>(a) << std::endl;
-  a = "hello world";
-  std::cout << "type: " << a.type().name() << " \n";// << std::any_cast<std::string>(a) << std::endl;
+  // anyTest();
+  childrenProcessTest();
   return 0;
 }
