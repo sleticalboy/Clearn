@@ -754,6 +754,16 @@ void childrenProcessTest() {
   }
 }
 
+std::string Audio_Convert(const std::string &raw_file) {
+  auto pos = raw_file.rfind(".wav");
+  if (pos != std::string::npos && raw_file.substr(pos) == ".wav") {
+    auto converted_file = "/tmp/hhh.wav";
+    if (run_pipe("ffmpeg -v error -i " + raw_file + " -ar 16000 -y " + converted_file).first != 0) abort();
+    return converted_file;
+  }
+  return raw_file;
+}
+
 int cpp_samples() {
   std::cout << "\n>>>>>>>Welcome to C++ World!<<<<<<<<\n" << std::endl;
   // cpp_string();
@@ -789,6 +799,7 @@ int cpp_samples() {
   // threadTest();
   // cmdRunnerTest();
   // anyTest();
-  childrenProcessTest();
+  // childrenProcessTest();
+  Audio_Convert("/home/binlee/Downloads/audio/2cdb153ea88a2292-11180259-1699930869146090308.wav");
   return 0;
 }
