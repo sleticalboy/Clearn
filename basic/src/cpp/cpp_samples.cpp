@@ -511,7 +511,17 @@ std::string timeFormatTest(float time) {
   return r.str();
 }
 
-void jsonTest() {
+// //////// json test start
+
+struct Results {
+  std::string language;
+  float duration;
+  std::vector<std::string> data;
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Results, language, duration, data)
+
+void jsonBasicSample() {
   // 从字符串解析
   auto j = nlohmann::json::parse(R"({"hello":"World","world":"Hello","duration": 2.79})");
   std::string h = j["hello"].get<std::string>();
@@ -553,6 +563,28 @@ void jsonTest() {
   o << j << std::endl;
   o.close();
 }
+
+void jsonObjectSample() {
+  Results r;
+  r.language = "en";
+  r.duration = 30.5;
+  r.data = {"hello", "world"};
+  auto rj = nlohmann::json(r);
+  std::cout << "obj json is: " << rj.dump() << std::endl;
+
+  Results rr;
+  rj["language"] = "zh";
+  rj["duration"] = 999.45;
+  rj.get_to<Results>(rr);
+  std::cout << "new language is: " << rr.language << std::endl;
+}
+
+void jsonTest() {
+  // jsonBasicSample();
+  jsonObjectSample();
+}
+
+// //////// json test end
 
 void ffmpegVideoReverseTest(const std::string &input_file, const std::string &output_file) {
   auto tmp_dir = std::string("/tmp/") + std::to_string(random()) + "x" + std::to_string(random());
@@ -780,7 +812,7 @@ int cpp_samples() {
   // fileObserverTest();
   // readFileTest();
   // classInstanceRefTest();
-  // jsonTest();
+  jsonTest();
   // pipeTest("ls -vervose");
   // ffmpegVideoReverseTest("/home/binlee/Downloads/audio/dance-4k.mp4", "/tmp/dance-4k-reversed.mp4");
   // ffmpegVideoReverseTest("/tmp/ff/res.mp4", "/tmp/ff/res-reversed.mp4");
@@ -800,6 +832,6 @@ int cpp_samples() {
   // cmdRunnerTest();
   // anyTest();
   // childrenProcessTest();
-  Audio_Convert("/home/binlee/Downloads/audio/2cdb153ea88a2292-11180259-1699930869146090308.wav");
+  // Audio_Convert("/home/binlee/Downloads/audio/2cdb153ea88a2292-11180259-1699930869146090308.wav");
   return 0;
 }
