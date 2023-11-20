@@ -514,9 +514,9 @@ std::string timeFormatTest(float time) {
 // //////// json test start
 
 struct Results {
-  std::string language;
-  float duration;
-  std::vector<std::string> data;
+  std::string language{};
+  float duration{};
+  std::vector<std::string> data{};
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Results, language, duration, data)
