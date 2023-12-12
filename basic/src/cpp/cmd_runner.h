@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <iostream>
+#include <sstream>
 
 static std::string NULL_VAL("_null_value_");
 static std::string PIPE_ERROR("_pipe_error_");

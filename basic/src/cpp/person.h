@@ -16,14 +16,14 @@
 #define FEMALE 0
 #endif
 
-class Person {
+class person {
 public:
   virtual void speak() = 0;
 
   virtual std::string toString() = 0;
 };
 
-class Ben : public Person {
+class Ben : public person {
 
 private:
   std::string mName;

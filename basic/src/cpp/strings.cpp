@@ -4,7 +4,7 @@
 
 #include <iostream>
 #include <string>
-#include "cpp_string.h"
+#include "strings.h"
 
 void cpp_string() {
   std::string hello = "Hello ";

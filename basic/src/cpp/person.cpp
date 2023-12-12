@@ -2,13 +2,13 @@
 // Created by binlee on 2020/9/8.
 //
 
-#include "Person.h"
+#include "person.h"
 
 Ben::Ben(std::string name, int age, int gender) {
-  mName = move(name);
+  mName = std::move(name);
   mAge = age;
   mGender = gender;
-  std::cout << "Person's constructor is invoked." << std::endl;
+  std::cout << "person's constructor is invoked." << std::endl;
 }
 
 void Ben::speak() {
@@ -21,7 +21,7 @@ std::string Ben::toString() {
 
 void person_main() {
 
-  std::cout << "\n>>>>>This is my first cpp class: Person<<<<<" << std::endl;
+  std::cout << "\n>>>>>This is my first cpp class: person<<<<<" << std::endl;
 
   Ben ben("Ben", 26, MALE);
 

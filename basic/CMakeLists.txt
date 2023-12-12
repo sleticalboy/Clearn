@@ -39,7 +39,9 @@ add_executable(c-samples
 # 可执行文件 c-samples
 add_executable(c++-samples
         src/cpp/cpp_samples.cpp
-        src/cpp/cpp_string.cpp
-        src/cpp/Person.cpp
+        src/cpp/strings.cpp
+        src/cpp/person.cpp
         src/cpp/main.cpp
-        )
+        src/cpp/ffmpeg_cmd.cpp
+        src/cpp/json_sample.cpp
+        src/cpp/io_sample.cpp)
